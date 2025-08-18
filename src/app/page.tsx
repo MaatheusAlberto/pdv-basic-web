@@ -14,7 +14,7 @@ export default function Home() {
 
         <LoginForm />
 
-        <div className="text-center text-sm">
+        {/* <div className="text-center text-sm">
           <p>
             Não tem uma conta?{" "}
             <Link
@@ -24,7 +24,7 @@ export default function Home() {
               Cadastre-se
             </Link>
           </p>
-        </div>
+        </div> */}
       </div>
     </div>
   );

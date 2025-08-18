@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   Home,
@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { headers } from "next/headers";
+import { authClient } from "@/lib/auth-client";
 
 const menuItems = [
   {
@@ -45,6 +47,17 @@ const menuItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  async function signOut() {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/");
+        },
+      },
+    });
+  }
 
   return (
     <div className="flex h-full w-64 flex-col bg-gray-900 text-white">
@@ -82,7 +95,7 @@ export function Sidebar() {
           className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800"
           asChild
         >
-          <Link href="/dashboard">
+          <Link href="/" onClick={() => signOut()}>
             <LogOut className="h-5 w-5 mr-3" />
             Sair
           </Link>

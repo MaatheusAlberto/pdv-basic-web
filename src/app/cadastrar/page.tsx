@@ -12,7 +12,7 @@ export default function Cadastrar() {
           </p>
         </div>
 
-        <SignupForm />
+        {/* <SignupForm /> */}
 
         <div className="text-center text-sm">
           <p>
