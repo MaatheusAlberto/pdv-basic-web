@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime
+  updatedAt     DateTime
+  sessions      Session[]
+  accounts      Account[]
+
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("account")
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
+}
+
+model Cliente {
+  id       BigInt  @id @default(autoincrement())
+  nome     String
+  email    String? @unique
+  telefone String?
+  vendas   Venda[]
+
+  @@map("clientes")
+}
+
+model Produto {
+  id             BigInt          @id @default(autoincrement())
+  nome           String
+  preco          Decimal         @db.Decimal(10, 2)
+  itensVenda     ItemVenda[]
+  itensDevolucao ItemDevolucao[]
+
+  @@map("produtos")
+}
+
+model Venda {
+  id         BigInt      @id @default(autoincrement())
+  clienteId  BigInt?     @map("cliente_id")
+  dataVenda  DateTime    @default(now()) @map("data_venda") @db.Timestamptz
+  total      Decimal     @db.Decimal(10, 2)
+  cliente    Cliente?    @relation(fields: [clienteId], references: [id])
+  itens      ItemVenda[]
+  devolucoes Devolucao[]
+
+  @@map("vendas")
+}
+
+model ItemVenda {
+  id            BigInt  @id @default(autoincrement())
+  vendaId       BigInt  @map("venda_id")
+  produtoId     BigInt  @map("produto_id")
+  quantidade    Int
+  precoUnitario Decimal @map("preco_unitario") @db.Decimal(10, 2)
+  venda         Venda   @relation(fields: [vendaId], references: [id])
+  produto       Produto @relation(fields: [produtoId], references: [id])
+
+  @@map("itens_venda")
+}
+
+model Devolucao {
+  id            BigInt          @id @default(autoincrement())
+  vendaId       BigInt          @map("venda_id")
+  dataDevolucao DateTime        @default(now()) @map("data_devolucao") @db.Timestamptz
+  total         Decimal         @db.Decimal(10, 2)
+  venda         Venda           @relation(fields: [vendaId], references: [id])
+  itens         ItemDevolucao[]
+
+  @@map("devolucoes")
+}
+
+model ItemDevolucao {
+  id            BigInt    @id @default(autoincrement())
+  devolucaoId   BigInt    @map("devolucao_id")
+  produtoId     BigInt    @map("produto_id")
+  quantidade    Int
+  precoUnitario Decimal   @map("preco_unitario") @db.Decimal(10, 2)
+  devolucao     Devolucao @relation(fields: [devolucaoId], references: [id])
+  produto       Produto   @relation(fields: [produtoId], references: [id])
+
+  @@map("itens_devolucao")
+}
