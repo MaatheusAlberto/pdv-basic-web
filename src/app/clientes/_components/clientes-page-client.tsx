@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Edit } from "lucide-react";
 import { ClienteForm } from "@/components/forms/cliente-form";
 import { getClientes, type Cliente } from "@/actions/cliente-actions";
 
@@ -10,6 +10,7 @@ export function ClientesPageClient() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
+  const [clienteEdicao, setClienteEdicao] = useState<Cliente | null>(null);
 
   const loadClientes = async () => {
     try {
@@ -28,11 +29,18 @@ export function ClientesPageClient() {
   }, []);
 
   const handleNovoCliente = () => {
+    setClienteEdicao(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEditarCliente = (cliente: Cliente) => {
+    setClienteEdicao(cliente);
     setIsModalOpen(true);
   };
 
   const handleSuccess = () => {
     loadClientes(); // Recarregar a lista após sucesso
+    setClienteEdicao(null);
   };
 
   return (
@@ -63,15 +71,28 @@ export function ClientesPageClient() {
               {clientes.map((cliente) => (
                 <div
                   key={cliente.id.toString()}
-                  className="border rounded-lg p-4"
+                  className="border rounded-lg p-4 flex justify-between items-start"
                 >
-                  <h4 className="font-medium">{cliente.nome}</h4>
-                  {cliente.email && (
-                    <p className="text-sm text-gray-600">{cliente.email}</p>
-                  )}
-                  {cliente.telefone && (
-                    <p className="text-sm text-gray-600">{cliente.telefone}</p>
-                  )}
+                  <div className="flex-1">
+                    <h4 className="font-medium">{cliente.nome}</h4>
+                    {cliente.email && (
+                      <p className="text-sm text-gray-600">{cliente.email}</p>
+                    )}
+                    {cliente.telefone && (
+                      <p className="text-sm text-gray-600">
+                        {cliente.telefone}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditarCliente(cliente)}
+                    className="flex items-center gap-2"
+                  >
+                    <Edit className="h-4 w-4" />
+                    Editar
+                  </Button>
                 </div>
               ))}
             </div>
@@ -82,6 +103,7 @@ export function ClientesPageClient() {
       <ClienteForm
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
+        cliente={clienteEdicao || undefined}
         onSuccess={handleSuccess}
       />
     </div>
