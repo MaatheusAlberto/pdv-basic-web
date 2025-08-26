@@ -269,10 +269,6 @@ export function DevolucaoForm({
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Itens para Devolução</CardTitle>
-                <Button type="button" onClick={addItem} size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Adicionar Item
-                </Button>
               </CardHeader>
               <CardContent className="space-y-4">
                 {fields.map((field, index) => (

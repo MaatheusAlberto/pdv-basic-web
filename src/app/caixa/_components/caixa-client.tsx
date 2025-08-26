@@ -331,7 +331,7 @@ export function CaixaClient() {
                                  (mov) => `
                  <tr>
                    <td>${formatDate(mov.data)}</td>
-                   <td><span class="tipo-${mov.tipo}">${
+                                      <td><span class="tipo-${mov.tipo}">${
                                    mov.tipo === "venda" ? "Venda" : "Devolução"
                                  }</span></td>
                    <td>${mov.cliente.nome}</td>

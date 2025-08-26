@@ -409,12 +409,14 @@ export async function createDevolucao(data: CreateDevolucaoData) {
       data: {
         ...devolucao,
         total: Number(devolucao.total.toString()),
-        venda: {
-          ...devolucao.venda,
-          total: Number(devolucao.venda.total.toString()),
-          clienteId: devolucao.venda.clienteId!,
-          cliente: devolucao.venda.cliente!,
-        },
+        venda: devolucao.venda
+          ? {
+              ...devolucao.venda,
+              total: Number(devolucao.venda.total.toString()),
+              clienteId: devolucao.venda.clienteId!,
+              cliente: devolucao.venda.cliente!,
+            }
+          : null,
         itens: devolucao.itens.map((item) => ({
           ...item,
           precoUnitario: Number(item.precoUnitario.toString()),
