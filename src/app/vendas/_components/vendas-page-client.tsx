@@ -11,6 +11,14 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import {
   Plus,
   RotateCcw,
   Eye,
@@ -19,17 +27,22 @@ import {
   User,
   ChevronLeft,
   ChevronRight,
+  Filter,
+  Printer,
 } from "lucide-react";
 import { VendaForm, DevolucaoForm } from "@/components/forms";
 import { getVendas, type Venda } from "@/actions/venda-actions";
+import { getClientes, type Cliente } from "@/actions/cliente-actions";
 import { toast } from "sonner";
 
 export function VendasPageClient() {
   const [isVendaModalOpen, setIsVendaModalOpen] = useState(false);
   const [isDevolucaoModalOpen, setIsDevolucaoModalOpen] = useState(false);
   const [vendas, setVendas] = useState<Venda[]>([]);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [vendaSelecionada, setVendaSelecionada] = useState<Venda | undefined>();
+  const [selectedCliente, setSelectedCliente] = useState<string>("all");
 
   // Estados para paginação
   const [currentPage, setCurrentPage] = useState(1);
@@ -48,8 +61,19 @@ export function VendasPageClient() {
     }
   };
 
+  const loadClientes = async () => {
+    try {
+      const clientesData = await getClientes();
+      setClientes(clientesData);
+    } catch (error) {
+      console.error("Erro ao carregar clientes:", error);
+      toast.error("Erro ao carregar clientes");
+    }
+  };
+
   useEffect(() => {
     loadVendas();
+    loadClientes();
   }, []);
 
   const handleNovaVenda = () => {
@@ -59,6 +83,155 @@ export function VendasPageClient() {
   const handleNovaDevolucao = (venda: Venda) => {
     setVendaSelecionada(venda);
     setIsDevolucaoModalOpen(true);
+  };
+
+  const handleImprimirComprovante = (venda: Venda) => {
+    // Gerar conteúdo do comprovante em formato HTML para impressão
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Comprovante - Venda #${venda.id.toString()}</title>
+        <style>
+          @page {
+            size: 80mm auto;
+            margin: 5mm;
+          }
+          body {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.2;
+            margin: 0;
+            padding: 0;
+            background: white;
+          }
+          .comprovante {
+            width: 70mm;
+            margin: 0 auto;
+          }
+          .center { text-align: center; }
+          .bold { font-weight: bold; }
+          .separator { border-top: 1px dashed #000; margin: 8px 0; }
+          .item-line { 
+            display: flex; 
+            justify-content: space-between; 
+            margin: 2px 0;
+          }
+          .total-line {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            margin: 4px 0;
+          }
+          @media print {
+            body { background: white; }
+            .no-print { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="comprovante">
+          <div class="center bold">COMPROVANTE DE VENDA</div>
+          <div class="center bold">Disk Bebida Gas Ouvidor</div>
+          <div class="separator"></div>
+          
+          <div><strong>Venda:</strong> #${venda.id.toString()}</div>
+          <div><strong>Data:</strong> ${formatDate(venda.dataVenda)}</div>
+          <div><strong>Cliente:</strong> ${venda.cliente.nome}</div>
+          
+          <div class="separator"></div>
+          
+          <div class="bold">ITENS:</div>
+          ${venda.itens
+            .map(
+              (item) => `
+            <div style="margin: 4px 0;">
+              <div>${item.produto.nome}</div>
+              <div class="item-line">
+                <span>Qtd: ${item.quantidade} x ${formatPrice(
+                item.precoUnitario
+              )}</span>
+                <span>${formatPrice(
+                  item.precoUnitario * item.quantidade
+                )}</span>
+              </div>
+            </div>
+          `
+            )
+            .join("")}
+          
+          <div class="separator"></div>
+          
+          <div class="total-line">
+            <span>TOTAL:</span>
+            <span>${formatPrice(venda.total)}</span>
+          </div>
+          
+          ${
+            venda.totalDevolvido > 0
+              ? `
+            <div class="total-line" style="color: red;">
+              <span>DEVOLVIDO:</span>
+              <span>-${formatPrice(venda.totalDevolvido)}</span>
+            </div>
+            <div class="total-line" style="color: green;">
+              <span>LÍQUIDO:</span>
+              <span>${formatPrice(venda.totalLiquido)}</span>
+            </div>
+          `
+              : ""
+          }
+          
+          <div class="separator"></div>
+          <div class="center" style="font-size: 10px;">
+            Obrigado pela preferência!
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    try {
+      // Criar uma nova janela para impressão
+      const printWindow = window.open("", "_blank", "width=300,height=600");
+
+      if (printWindow) {
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+
+        // Aguardar o carregamento e abrir diálogo de impressão
+        printWindow.onload = () => {
+          setTimeout(() => {
+            printWindow.print();
+            // Opcional: fechar a janela após a impressão
+            printWindow.onafterprint = () => {
+              printWindow.close();
+            };
+          }, 250);
+        };
+
+        toast.success("Abrindo diálogo de impressão...");
+      } else {
+        // Fallback: criar blob para download se popup foi bloqueado
+        const blob = new Blob([htmlContent], { type: "text/html" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `comprovante-venda-${venda.id.toString()}.html`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        toast.warning(
+          "Popup bloqueado. Arquivo baixado para impressão manual."
+        );
+      }
+    } catch (error) {
+      console.error("Erro ao gerar comprovante:", error);
+      toast.error("Erro ao gerar comprovante para impressão");
+    }
   };
 
   const handleSuccess = () => {
@@ -86,17 +259,25 @@ export function VendasPageClient() {
     return venda.itens.reduce((total, item) => total + item.quantidade, 0);
   };
 
+  // Filtrar vendas por cliente
+  const vendasFiltradas =
+    selectedCliente === "all"
+      ? vendas
+      : vendas.filter(
+          (venda) => venda.cliente.id.toString() === selectedCliente
+        );
+
   const getVendaStats = () => {
-    const totalVendas = vendas.length;
-    const totalFaturamento = vendas.reduce(
+    const totalVendas = vendasFiltradas.length;
+    const totalFaturamento = vendasFiltradas.reduce(
       (total, venda) => total + venda.totalLiquido,
       0
     );
-    const totalDevolvido = vendas.reduce(
+    const totalDevolvido = vendasFiltradas.reduce(
       (total, venda) => total + venda.totalDevolvido,
       0
     );
-    const vendasHoje = vendas.filter((venda) => {
+    const vendasHoje = vendasFiltradas.filter((venda) => {
       const hoje = new Date();
       const dataVenda = new Date(venda.dataVenda);
       return dataVenda.toDateString() === hoje.toDateString();
@@ -108,10 +289,15 @@ export function VendasPageClient() {
   const stats = getVendaStats();
 
   // Funções de paginação
-  const totalPages = Math.ceil(vendas.length / itemsPerPage);
+  const totalPages = Math.ceil(vendasFiltradas.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const vendasPaginadas = vendas.slice(startIndex, endIndex);
+  const vendasPaginadas = vendasFiltradas.slice(startIndex, endIndex);
+
+  // Reset da página quando mudar o filtro
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCliente]);
 
   const handlePreviousPage = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
@@ -138,6 +324,54 @@ export function VendasPageClient() {
           Nova Venda
         </Button>
       </div>
+
+      {/* Filtros */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Filter className="h-4 w-4" />
+            Filtros
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
+            <div className="flex-1 min-w-0">
+              <Label htmlFor="cliente-filter" className="text-sm font-medium">
+                Cliente
+              </Label>
+              <Select
+                value={selectedCliente}
+                onValueChange={setSelectedCliente}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Selecione um cliente" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os clientes</SelectItem>
+                  {clientes.map((cliente) => (
+                    <SelectItem
+                      key={cliente.id.toString()}
+                      value={cliente.id.toString()}
+                    >
+                      {cliente.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {selectedCliente !== "all" && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedCliente("all")}
+                className="shrink-0"
+              >
+                Limpar Filtros
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Cards de Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -201,11 +435,29 @@ export function VendasPageClient() {
       {/* Lista de Vendas */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Histórico de Vendas</CardTitle>
-          {vendas.length > 0 && (
+          <CardTitle>
+            Histórico de Vendas
+            {selectedCliente !== "all" && (
+              <span className="text-sm font-normal text-gray-500 ml-2">
+                • Filtrado por:{" "}
+                {
+                  clientes.find((c) => c.id.toString() === selectedCliente)
+                    ?.nome
+                }
+              </span>
+            )}
+          </CardTitle>
+          {vendasFiltradas.length > 0 && (
             <div className="flex items-center gap-2 text-sm text-gray-600">
-              Mostrando {startIndex + 1}-{Math.min(endIndex, vendas.length)} de{" "}
-              {vendas.length}
+              Mostrando {startIndex + 1}-
+              {Math.min(endIndex, vendasFiltradas.length)} de{" "}
+              {vendasFiltradas.length}
+              {selectedCliente !== "all" &&
+                vendas.length !== vendasFiltradas.length && (
+                  <span className="text-gray-400">
+                    (de {vendas.length} total)
+                  </span>
+                )}
             </div>
           )}
         </CardHeader>
@@ -219,6 +471,21 @@ export function VendasPageClient() {
               <p className="text-gray-400">
                 Clique em "Nova Venda" para começar
               </p>
+            </div>
+          ) : vendasFiltradas.length === 0 ? (
+            <div className="text-center py-8">
+              <Filter className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500 text-lg">Nenhuma venda encontrada</p>
+              <p className="text-gray-400">
+                Tente alterar os filtros ou selecionar "Todos os clientes"
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => setSelectedCliente("all")}
+                className="mt-4"
+              >
+                Limpar Filtros
+              </Button>
             </div>
           ) : (
             <>
@@ -363,12 +630,21 @@ export function VendasPageClient() {
                               )}
                           </div>
 
-                          <div className="ml-4">
+                          <div className="ml-4 space-y-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleImprimirComprovante(venda)}
+                              className="flex items-center gap-1 w-full"
+                            >
+                              <Printer className="h-4 w-4" />
+                              Imprimir
+                            </Button>
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleNovaDevolucao(venda)}
-                              className="flex items-center gap-1"
+                              className="flex items-center gap-1 w-full"
                             >
                               <RotateCcw className="h-4 w-4" />
                               Devolução

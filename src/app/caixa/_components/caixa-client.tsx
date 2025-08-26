@@ -187,10 +187,11 @@ export function CaixaClient() {
             .positive { color: #16a34a; }
             .negative { color: #dc2626; }
             table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }
             th { background-color: #f5f5f5; font-weight: bold; }
             .tipo-venda { background-color: #dcfce7; color: #16a34a; padding: 2px 8px; border-radius: 4px; }
             .tipo-devolucao { background-color: #fecaca; color: #dc2626; padding: 2px 8px; border-radius: 4px; }
+            .item-row { margin-bottom: 8px; font-size: 12px; line-height: 1.4; }
             .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
           </style>
         </head>
@@ -243,6 +244,7 @@ export function CaixaClient() {
                  <th>Data/Hora</th>
                  <th>Tipo</th>
                  <th>Cliente</th>
+                 <th>Itens</th>
                  <th>Valor</th>
                </tr>
              </thead>
@@ -256,6 +258,20 @@ export function CaixaClient() {
                                    mov.tipo === "venda" ? "Venda" : "Devolução"
                                  }</span></td>
                    <td>${mov.cliente.nome}</td>
+                   <td>
+                     ${mov.itens
+                       .map(
+                         (item) => `
+                       <div class="item-row">
+                         <strong>${item.produto}</strong><br/>
+                         Qtd: ${item.quantidade} × ${formatPrice(
+                           item.precoUnitario
+                         )} = ${formatPrice(item.total)}
+                       </div>
+                     `
+                       )
+                       .join("")}
+                   </td>
                    <td class="${
                      mov.valor >= 0 ? "positive" : "negative"
                    }">${formatPrice(Math.abs(mov.valor))}</td>
@@ -497,6 +513,7 @@ export function CaixaClient() {
                 <TableHead>Data/Hora</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead>Cliente</TableHead>
+                <TableHead>Itens</TableHead>
                 <TableHead>Valor</TableHead>
               </TableRow>
             </TableHeader>
@@ -527,6 +544,21 @@ export function CaixaClient() {
                     </Badge>
                   </TableCell>
                   <TableCell>{movimentacao.cliente.nome}</TableCell>
+                  <TableCell className="max-w-xs">
+                    <div className="space-y-1">
+                      {movimentacao.itens.map((item, index) => (
+                        <div key={index} className="text-sm">
+                          <span className="font-medium">{item.produto}</span>
+                          <br />
+                          <span className="text-gray-500">
+                            Qtd: {item.quantidade} ×{" "}
+                            {formatPrice(item.precoUnitario)} ={" "}
+                            {formatPrice(item.total)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <span
                       className={
