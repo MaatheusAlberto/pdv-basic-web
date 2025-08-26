@@ -34,6 +34,7 @@ import {
 import { VendaForm, DevolucaoForm } from "@/components/forms";
 import { getVendas, type Venda } from "@/actions/venda-actions";
 import { getClientes, type Cliente } from "@/actions/cliente-actions";
+import { getProdutos, type Produto } from "@/actions/produto-actions";
 import { toast } from "sonner";
 
 export function VendasPageClient() {
@@ -41,9 +42,11 @@ export function VendasPageClient() {
   const [isDevolucaoModalOpen, setIsDevolucaoModalOpen] = useState(false);
   const [vendas, setVendas] = useState<Venda[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [produtos, setProdutos] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(true);
   const [vendaSelecionada, setVendaSelecionada] = useState<Venda | undefined>();
   const [selectedCliente, setSelectedCliente] = useState<string>("all");
+  const [selectedProduto, setSelectedProduto] = useState<string>("all");
   const [dataInicial, setDataInicial] = useState<string>(() => {
     // Pega a data atual no formato YYYY-MM-DD
     const today = new Date();
@@ -82,9 +85,20 @@ export function VendasPageClient() {
     }
   };
 
+  const loadProdutos = async () => {
+    try {
+      const produtosData = await getProdutos();
+      setProdutos(produtosData);
+    } catch (error) {
+      console.error("Erro ao carregar produtos:", error);
+      toast.error("Erro ao carregar produtos");
+    }
+  };
+
   useEffect(() => {
     loadVendas();
     loadClientes();
+    loadProdutos();
   }, []);
 
   const handleNovaVenda = () => {
@@ -276,12 +290,19 @@ export function VendasPageClient() {
     return venda.itens.reduce((total, item) => total + item.quantidade, 0);
   };
 
-  // Filtrar vendas por cliente e intervalo de datas
+  // Filtrar vendas por cliente, produto e intervalo de datas
   const vendasFiltradas = vendas.filter((venda) => {
     // Filtro por cliente
     const clienteMatch =
       selectedCliente === "all" ||
       venda.cliente.id.toString() === selectedCliente;
+
+    // Filtro por produto
+    const produtoMatch =
+      selectedProduto === "all" ||
+      venda.itens.some(
+        (item) => item.produto.id.toString() === selectedProduto
+      );
 
     // Filtro por intervalo de datas
     const vendaDate = new Date(venda.dataVenda).toISOString().split("T")[0];
@@ -289,7 +310,7 @@ export function VendasPageClient() {
     const dataFinalMatch = vendaDate <= dataFinal;
     const dateMatch = dataInicialMatch && dataFinalMatch;
 
-    return clienteMatch && dateMatch;
+    return clienteMatch && produtoMatch && dateMatch;
   });
 
   const getVendaStats = () => {
@@ -384,6 +405,30 @@ export function VendasPageClient() {
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <Label htmlFor="produto-filter" className="text-sm font-medium">
+                Produto
+              </Label>
+              <Select
+                value={selectedProduto}
+                onValueChange={setSelectedProduto}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Selecione um produto" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os produtos</SelectItem>
+                  {produtos.map((produto) => (
+                    <SelectItem
+                      key={produto.id.toString()}
+                      value={produto.id.toString()}
+                    >
+                      {produto.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="min-w-0 w-full sm:w-auto">
               <Label htmlFor="data-inicial" className="text-sm font-medium">
                 Data Inicial
@@ -409,6 +454,7 @@ export function VendasPageClient() {
               />
             </div>
             {(selectedCliente !== "all" ||
+              selectedProduto !== "all" ||
               dataInicial !== new Date().toISOString().split("T")[0] ||
               dataFinal !== new Date().toISOString().split("T")[0]) && (
               <Button
@@ -416,6 +462,7 @@ export function VendasPageClient() {
                 size="sm"
                 onClick={() => {
                   setSelectedCliente("all");
+                  setSelectedProduto("all");
                   const today = new Date().toISOString().split("T")[0];
                   setDataInicial(today);
                   setDataFinal(today);

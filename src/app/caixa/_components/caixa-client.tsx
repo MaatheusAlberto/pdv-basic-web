@@ -118,8 +118,11 @@ export function CaixaClient() {
     const inicio = new Date();
     inicio.setDate(inicio.getDate() - 30);
 
+    const amanha = new Date();
+    amanha.setDate(amanha.getDate() + 1);
+
     setStartDate(inicio.toISOString().split("T")[0]);
-    setEndDate(hoje.toISOString().split("T")[0]);
+    setEndDate(amanha.toISOString().split("T")[0]);
 
     loadCaixaData();
   }, []);
