@@ -169,6 +169,80 @@ export function CaixaClient() {
         return;
       }
 
+      // Calcular resumo de produtos quando for "Todos os clientes"
+      const getProductSummary = () => {
+        if (selectedCliente !== "all") return "";
+
+        const productTotals = new Map<
+          string,
+          {
+            quantidade: number;
+            valorTotal: number;
+            vendas: number;
+            devolucoes: number;
+          }
+        >();
+
+        data.movimentacoes.forEach((mov) => {
+          mov.itens.forEach((item) => {
+            const current = productTotals.get(item.produto) || {
+              quantidade: 0,
+              valorTotal: 0,
+              vendas: 0,
+              devolucoes: 0,
+            };
+
+            if (mov.tipo === "venda") {
+              current.quantidade += item.quantidade;
+              current.valorTotal += item.total;
+              current.vendas += 1;
+            } else {
+              current.quantidade -= item.quantidade;
+              current.valorTotal -= item.total;
+              current.devolucoes += 1;
+            }
+
+            productTotals.set(item.produto, current);
+          });
+        });
+
+        if (productTotals.size === 0) return "";
+
+        const sortedProducts = Array.from(productTotals.entries()).sort(
+          (a, b) => b[1].valorTotal - a[1].valorTotal
+        );
+
+        return `
+          <div class="resumo-produtos">
+            <h2>Resumo por Produto</h2>
+            <table>
+              <thead>
+                <tr>
+                  <th>Produto</th>
+                  <th>Quantidade Total</th>
+                  <th>Valor Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${sortedProducts
+                  .map(
+                    ([produto, totals]) => `
+                  <tr>
+                    <td><strong>${produto}</strong></td>
+                    <td>${totals.quantidade}</td>
+                    <td class="${
+                      totals.valorTotal >= 0 ? "positive" : "negative"
+                    }">${formatPrice(totals.valorTotal)}</td>
+                  </tr>
+                `
+                  )
+                  .join("")}
+              </tbody>
+            </table>
+          </div>
+        `;
+      };
+
       // Criar HTML para o PDF
       const htmlContent = `
         <!DOCTYPE html>
@@ -180,6 +254,7 @@ export function CaixaClient() {
             body { font-family: Arial, sans-serif; margin: 20px; }
             .header { text-align: center; margin-bottom: 30px; }
             .resumo { margin-bottom: 30px; }
+            .resumo-produtos { margin-bottom: 30px; }
             .resumo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
             .resumo-card { border: 1px solid #ddd; padding: 15px; border-radius: 5px; }
             .resumo-title { font-weight: bold; font-size: 14px; margin-bottom: 5px; }
@@ -236,6 +311,8 @@ export function CaixaClient() {
               </div>
             </div>
           </div>
+
+          ${getProductSummary()}
 
                      <h2>Movimentações</h2>
            <table>

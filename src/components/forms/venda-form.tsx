@@ -54,7 +54,7 @@ type VendaFormData = z.infer<typeof vendaSchema>;
 interface VendaFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: () => void;
+  onSuccess?: (vendaData?: any) => void;
 }
 
 export function VendaForm({ open, onOpenChange, onSuccess }: VendaFormProps) {
@@ -151,7 +151,7 @@ export function VendaForm({ open, onOpenChange, onSuccess }: VendaFormProps) {
         form.reset();
         onOpenChange(false);
         if (onSuccess) {
-          onSuccess();
+          onSuccess(result.data);
         }
       } else {
         toast.error(result.error);

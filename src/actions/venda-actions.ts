@@ -271,20 +271,28 @@ export async function createVenda(data: CreateVendaData) {
 
     revalidatePath("/vendas");
 
+    // Formatando dados para retorno com estrutura completa para impressão
+    const vendaFormatada = {
+      ...venda,
+      clienteId: venda.clienteId!,
+      cliente: venda.cliente!,
+      total: Number(venda.total.toString()),
+      totalDevolvido: 0,
+      totalLiquido: Number(venda.total.toString()),
+      itens: venda.itens.map((item) => ({
+        ...item,
+        precoUnitario: Number(item.precoUnitario.toString()),
+        produto: {
+          ...item.produto,
+          preco: Number(item.produto.preco.toString()),
+        },
+      })),
+      devolucoes: [],
+    };
+
     return {
       success: true,
-      data: {
-        ...venda,
-        total: Number(venda.total.toString()),
-        itens: venda.itens.map((item) => ({
-          ...item,
-          precoUnitario: Number(item.precoUnitario.toString()),
-          produto: {
-            ...item.produto,
-            preco: Number(item.produto.preco.toString()),
-          },
-        })),
-      },
+      data: vendaFormatada,
       message: "Venda registrada com sucesso",
     };
   } catch (error) {

@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
   Plus,
   RotateCcw,
@@ -43,10 +44,20 @@ export function VendasPageClient() {
   const [loading, setLoading] = useState(true);
   const [vendaSelecionada, setVendaSelecionada] = useState<Venda | undefined>();
   const [selectedCliente, setSelectedCliente] = useState<string>("all");
+  const [dataInicial, setDataInicial] = useState<string>(() => {
+    // Pega a data atual no formato YYYY-MM-DD
+    const today = new Date();
+    return today.toISOString().split("T")[0];
+  });
+  const [dataFinal, setDataFinal] = useState<string>(() => {
+    // Pega a data atual no formato YYYY-MM-DD
+    const today = new Date();
+    return today.toISOString().split("T")[0];
+  });
 
   // Estados para paginação
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
   const loadVendas = async () => {
     try {
@@ -234,8 +245,14 @@ export function VendasPageClient() {
     }
   };
 
-  const handleSuccess = () => {
-    loadVendas(); // Recarregar a lista após sucesso
+  const handleSuccess = (vendaData?: any) => {
+    loadVendas();
+
+    if (vendaData) {
+      setTimeout(() => {
+        handleImprimirComprovante(vendaData);
+      }, 500);
+    }
   };
 
   const formatPrice = (price: number) => {
@@ -259,13 +276,21 @@ export function VendasPageClient() {
     return venda.itens.reduce((total, item) => total + item.quantidade, 0);
   };
 
-  // Filtrar vendas por cliente
-  const vendasFiltradas =
-    selectedCliente === "all"
-      ? vendas
-      : vendas.filter(
-          (venda) => venda.cliente.id.toString() === selectedCliente
-        );
+  // Filtrar vendas por cliente e intervalo de datas
+  const vendasFiltradas = vendas.filter((venda) => {
+    // Filtro por cliente
+    const clienteMatch =
+      selectedCliente === "all" ||
+      venda.cliente.id.toString() === selectedCliente;
+
+    // Filtro por intervalo de datas
+    const vendaDate = new Date(venda.dataVenda).toISOString().split("T")[0];
+    const dataInicialMatch = vendaDate >= dataInicial;
+    const dataFinalMatch = vendaDate <= dataFinal;
+    const dateMatch = dataInicialMatch && dataFinalMatch;
+
+    return clienteMatch && dateMatch;
+  });
 
   const getVendaStats = () => {
     const totalVendas = vendasFiltradas.length;
@@ -297,7 +322,7 @@ export function VendasPageClient() {
   // Reset da página quando mudar o filtro
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCliente]);
+  }, [selectedCliente, dataInicial, dataFinal]);
 
   const handlePreviousPage = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
@@ -335,7 +360,7 @@ export function VendasPageClient() {
         </CardHeader>
         <CardContent className="pt-0">
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-end">
-            <div className="flex-1 min-w-0">
+            <div>
               <Label htmlFor="cliente-filter" className="text-sm font-medium">
                 Cliente
               </Label>
@@ -359,11 +384,42 @@ export function VendasPageClient() {
                 </SelectContent>
               </Select>
             </div>
-            {selectedCliente !== "all" && (
+            <div className="min-w-0 w-full sm:w-auto">
+              <Label htmlFor="data-inicial" className="text-sm font-medium">
+                Data Inicial
+              </Label>
+              <Input
+                id="data-inicial"
+                type="date"
+                value={dataInicial}
+                onChange={(e) => setDataInicial(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <div className="min-w-0 w-full sm:w-auto">
+              <Label htmlFor="data-final" className="text-sm font-medium">
+                Data Final
+              </Label>
+              <Input
+                id="data-final"
+                type="date"
+                value={dataFinal}
+                onChange={(e) => setDataFinal(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            {(selectedCliente !== "all" ||
+              dataInicial !== new Date().toISOString().split("T")[0] ||
+              dataFinal !== new Date().toISOString().split("T")[0]) && (
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setSelectedCliente("all")}
+                onClick={() => {
+                  setSelectedCliente("all");
+                  const today = new Date().toISOString().split("T")[0];
+                  setDataInicial(today);
+                  setDataFinal(today);
+                }}
                 className="shrink-0"
               >
                 Limpar Filtros
@@ -437,13 +493,23 @@ export function VendasPageClient() {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>
             Histórico de Vendas
-            {selectedCliente !== "all" && (
+            {(selectedCliente !== "all" ||
+              dataInicial !== new Date().toISOString().split("T")[0] ||
+              dataFinal !== new Date().toISOString().split("T")[0]) && (
               <span className="text-sm font-normal text-gray-500 ml-2">
                 • Filtrado por:{" "}
-                {
+                {selectedCliente !== "all" &&
                   clientes.find((c) => c.id.toString() === selectedCliente)
-                    ?.nome
-                }
+                    ?.nome}
+                {selectedCliente !== "all" &&
+                  (dataInicial !== new Date().toISOString().split("T")[0] ||
+                    dataFinal !== new Date().toISOString().split("T")[0]) &&
+                  ", "}
+                {(dataInicial !== new Date().toISOString().split("T")[0] ||
+                  dataFinal !== new Date().toISOString().split("T")[0]) &&
+                  `${new Date(dataInicial).toLocaleDateString(
+                    "pt-BR"
+                  )} até ${new Date(dataFinal).toLocaleDateString("pt-BR")}`}
               </span>
             )}
           </CardTitle>
@@ -481,7 +547,12 @@ export function VendasPageClient() {
               </p>
               <Button
                 variant="outline"
-                onClick={() => setSelectedCliente("all")}
+                onClick={() => {
+                  setSelectedCliente("all");
+                  const today = new Date().toISOString().split("T")[0];
+                  setDataInicial(today);
+                  setDataFinal(today);
+                }}
                 className="mt-4"
               >
                 Limpar Filtros
