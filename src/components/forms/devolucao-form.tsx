@@ -281,7 +281,7 @@ export function DevolucaoForm({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="min-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="min-w-6xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <RotateCcw className="h-5 w-5" />
@@ -298,7 +298,7 @@ export function DevolucaoForm({
               <CardTitle>Dados da Venda Original</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-2 gap-2 text-sm">
                 <div>
                   <strong>ID da Venda:</strong> #{venda.id.toString()}
                 </div>
@@ -511,8 +511,8 @@ export function DevolucaoForm({
 
       {/* Modal de Confirmação */}
       <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
             <DialogTitle className="flex items-center gap-2">
               <RotateCcw className="h-5 w-5" />
               Confirmar Devolução
@@ -523,97 +523,102 @@ export function DevolucaoForm({
           </DialogHeader>
 
           {confirmationData && venda && (
-            <div className="space-y-4">
-              {/* Resumo da Venda */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Dados da Venda</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <strong>Venda:</strong> #{venda.id.toString()}
+            <>
+              {/* Conteúdo com scroll */}
+              <div className="flex-1 overflow-y-auto space-y-2 pr-2">
+                {/* Resumo da Venda */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Dados da Venda</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-sm">
+                      <div>
+                        <strong>Venda:</strong> #{venda.id.toString()}
+                      </div>
+                      <div>
+                        <strong>Cliente:</strong> {venda.cliente.nome}
+                      </div>
+                      <div>
+                        <strong>Data:</strong> {formatDate(venda.dataVenda)}
+                      </div>
+                      <div>
+                        <strong>Total Original:</strong>{" "}
+                        {formatPrice(venda.total)}
+                      </div>
                     </div>
-                    <div>
-                      <strong>Cliente:</strong> {venda.cliente.nome}
-                    </div>
-                    <div>
-                      <strong>Data:</strong> {formatDate(venda.dataVenda)}
-                    </div>
-                    <div>
-                      <strong>Total Original:</strong>{" "}
-                      {formatPrice(venda.total)}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
 
-              {/* Itens a Devolver */}
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Itens a Devolver</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {confirmationData.itens.map((item, index) => {
-                      const produtoVenda = venda.itens.find(
-                        (vendaItem) =>
-                          vendaItem.produtoId.toString() === item.produtoId
-                      );
-                      return (
-                        <div
-                          key={index}
-                          className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
-                        >
-                          <div className="flex-1">
-                            <div className="font-medium">
-                              {produtoVenda?.produto.nome}
+                {/* Itens a Devolver */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">
+                      Itens a Devolver
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3 max-h-60 overflow-y-auto">
+                      {confirmationData.itens.map((item, index) => {
+                        const produtoVenda = venda.itens.find(
+                          (vendaItem) =>
+                            vendaItem.produtoId.toString() === item.produtoId
+                        );
+                        return (
+                          <div
+                            key={index}
+                            className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-3 bg-gray-50 rounded-lg gap-2"
+                          >
+                            <div className="flex-1">
+                              <div className="font-medium">
+                                {produtoVenda?.produto.nome}
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                {formatPrice(item.precoUnitario)} ×{" "}
+                                {item.quantidade}
+                              </div>
                             </div>
-                            <div className="text-sm text-gray-600">
-                              {formatPrice(item.precoUnitario)} ×{" "}
-                              {item.quantidade}
+                            <div className="text-left sm:text-right">
+                              <div className="font-semibold text-red-600">
+                                -
+                                {formatPrice(
+                                  item.quantidade * item.precoUnitario
+                                )}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                Qtd: {item.quantidade} de{" "}
+                                {produtoVenda?.quantidade}
+                              </div>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <div className="font-semibold text-red-600">
-                              -
-                              {formatPrice(
-                                item.quantidade * item.precoUnitario
-                              )}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              Qtd: {item.quantidade} de{" "}
-                              {produtoVenda?.quantidade}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Total da Devolução */}
-                  <div className="mt-4 pt-4 border-t">
-                    <div className="flex justify-between items-center">
-                      <span className="text-lg font-semibold">
-                        Total a Devolver:
-                      </span>
-                      <span className="text-xl font-bold text-red-600">
-                        -
-                        {formatPrice(
-                          confirmationData.itens.reduce(
-                            (total, item) =>
-                              total + item.quantidade * item.precoUnitario,
-                            0
-                          )
-                        )}
-                      </span>
+                        );
+                      })}
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
 
-              {/* Botões de Confirmação */}
-              <div className="flex justify-end space-x-2 pt-4">
+                    {/* Total da Devolução */}
+                    <div className="mt-4 pt-4 border-t">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                        <span className="text-lg font-semibold">
+                          Total a Devolver:
+                        </span>
+                        <span className="text-xl font-bold text-red-600">
+                          -
+                          {formatPrice(
+                            confirmationData.itens.reduce(
+                              (total, item) =>
+                                total + item.quantidade * item.precoUnitario,
+                              0
+                            )
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Botões de Confirmação - Fixos no final */}
+              <div className="flex-shrink-0 flex flex-col sm:flex-row justify-end gap-2 sm:space-x-2 pt-4 border-t bg-white">
                 <Button
                   type="button"
                   variant="outline"
@@ -622,18 +627,19 @@ export function DevolucaoForm({
                     setConfirmationData(null);
                   }}
                   disabled={isLoading}
+                  className="w-full sm:w-auto"
                 >
                   Cancelar
                 </Button>
                 <Button
                   onClick={handleConfirmDevolucao}
                   disabled={isLoading}
-                  className="bg-red-600 hover:bg-red-700"
+                  className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
                 >
                   {isLoading ? "Processando..." : "Confirmar Devolução"}
                 </Button>
               </div>
-            </div>
+            </>
           )}
         </DialogContent>
       </Dialog>
