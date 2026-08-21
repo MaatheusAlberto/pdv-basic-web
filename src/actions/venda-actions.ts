@@ -4,6 +4,11 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { Decimal } from "@prisma/client/runtime/library";
+import {
+  arredondar,
+  calcularStatusPagamento,
+  type StatusPagamento,
+} from "@/lib/pagamento";
 
 // Schema para validação dos dados da venda
 const ItemVendaSchema = z.object({
@@ -66,6 +71,16 @@ export type Venda = {
       };
     }[];
   }[];
+  pagamentos: {
+    id: bigint;
+    valor: number;
+    formaPagamento: string | null;
+    observacao: string | null;
+    dataPagamento: Date;
+  }[];
+  totalPago: number;
+  saldo: number;
+  statusPagamento: StatusPagamento;
 };
 
 export type ItemVenda = {
@@ -97,6 +112,11 @@ export async function getVendas(): Promise<Venda[]> {
             },
           },
         },
+        pagamentos: {
+          orderBy: {
+            dataPagamento: "asc",
+          },
+        },
       },
       orderBy: {
         dataVenda: "desc",
@@ -112,6 +132,13 @@ export async function getVendas(): Promise<Venda[]> {
           0
         );
         const totalOriginal = Number(venda.total.toString());
+        const totalPago = arredondar(
+          venda.pagamentos.reduce(
+            (acc, pagamento) => acc + Number(pagamento.valor.toString()),
+            0
+          )
+        );
+        const totalLiquido = arredondar(totalOriginal - totalDevolvido);
 
         return {
           ...venda,
@@ -119,7 +146,14 @@ export async function getVendas(): Promise<Venda[]> {
           cliente: venda.cliente!,
           total: totalOriginal,
           totalDevolvido,
-          totalLiquido: totalOriginal - totalDevolvido,
+          totalLiquido,
+          pagamentos: venda.pagamentos.map((pagamento) => ({
+            ...pagamento,
+            valor: Number(pagamento.valor.toString()),
+          })),
+          totalPago,
+          saldo: arredondar(totalLiquido - totalPago),
+          statusPagamento: calcularStatusPagamento(totalLiquido, totalPago),
           itens: venda.itens.map((item) => ({
             ...item,
             precoUnitario: Number(item.precoUnitario.toString()),
@@ -169,6 +203,11 @@ export async function getVendaById(id: bigint): Promise<Venda | null> {
             },
           },
         },
+        pagamentos: {
+          orderBy: {
+            dataPagamento: "asc",
+          },
+        },
       },
     });
 
@@ -180,6 +219,13 @@ export async function getVendaById(id: bigint): Promise<Venda | null> {
       0
     );
     const totalOriginal = Number(venda.total.toString());
+    const totalPago = arredondar(
+      venda.pagamentos.reduce(
+        (acc, pagamento) => acc + Number(pagamento.valor.toString()),
+        0
+      )
+    );
+    const totalLiquido = arredondar(totalOriginal - totalDevolvido);
 
     return {
       ...venda,
@@ -187,7 +233,14 @@ export async function getVendaById(id: bigint): Promise<Venda | null> {
       cliente: venda.cliente,
       total: totalOriginal,
       totalDevolvido,
-      totalLiquido: totalOriginal - totalDevolvido,
+      totalLiquido,
+      pagamentos: venda.pagamentos.map((pagamento) => ({
+        ...pagamento,
+        valor: Number(pagamento.valor.toString()),
+      })),
+      totalPago,
+      saldo: arredondar(totalLiquido - totalPago),
+      statusPagamento: calcularStatusPagamento(totalLiquido, totalPago),
       itens: venda.itens.map((item) => ({
         ...item,
         precoUnitario: Number(item.precoUnitario.toString()),
@@ -279,6 +332,10 @@ export async function createVenda(data: CreateVendaData) {
       total: Number(venda.total.toString()),
       totalDevolvido: 0,
       totalLiquido: Number(venda.total.toString()),
+      pagamentos: [],
+      totalPago: 0,
+      saldo: Number(venda.total.toString()),
+      statusPagamento: "PENDENTE" as const,
       itens: venda.itens.map((item) => ({
         ...item,
         precoUnitario: Number(item.precoUnitario.toString()),

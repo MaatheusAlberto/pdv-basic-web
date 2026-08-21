@@ -29,7 +29,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createVenda } from "@/actions/venda-actions";
 import { getClientes, type Cliente } from "@/actions/cliente-actions";
 import { getProdutos, type Produto } from "@/actions/produto-actions";
@@ -171,10 +170,17 @@ export function VendaForm({ open, onOpenChange, onSuccess }: VendaFormProps) {
     }).format(price);
   };
 
+
+  const itensAtuais = form.watch("itens");
+  const totalItens = itensAtuais.reduce(
+    (total, item) => total + (item.quantidade || 0),
+    0
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="min-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[92vh] w-[95vw] flex-col gap-3 overflow-hidden p-4 sm:max-w-4xl sm:p-6">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <ShoppingCart className="h-5 w-5" />
             Nova Venda
@@ -187,152 +193,160 @@ export function VendaForm({ open, onOpenChange, onSuccess }: VendaFormProps) {
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-6"
+            className="flex min-h-0 flex-1 flex-col gap-3"
           >
-            {/* Seleção do Cliente */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Cliente</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <FormField
-                  control={form.control}
-                  name="clienteId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cliente *</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione um cliente" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {clientes.map((cliente) => (
-                            <SelectItem
-                              key={cliente.id.toString()}
-                              value={cliente.id.toString()}
-                            >
-                              {cliente.nome}
-                              {cliente.email && ` (${cliente.email})`}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
+            {/* Cliente + adicionar item */}
+            <div className="flex flex-shrink-0 flex-col gap-2 sm:flex-row sm:items-end">
+              <FormField
+                control={form.control}
+                name="clienteId"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel className="text-xs font-medium text-gray-500">
+                      Cliente *
+                    </FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Selecione um cliente" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {clientes.map((cliente) => (
+                          <SelectItem
+                            key={cliente.id.toString()}
+                            value={cliente.id.toString()}
+                          >
+                            {cliente.nome}
+                            {cliente.email && ` (${cliente.email})`}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            {/* Itens da Venda */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Itens da Venda</CardTitle>
-                <Button type="button" onClick={addItem} size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Adicionar Item
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {fields.map((field, index) => (
-                  <div
-                    key={field.id}
-                    className="flex gap-4 items-end p-4 border rounded-lg"
-                  >
-                    <div className="flex-1">
-                      <FormField
-                        control={form.control}
-                        name={`itens.${index}.produtoId`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Produto *</FormLabel>
-                            <Select
-                              onValueChange={(value) => {
-                                field.onChange(value);
-                                handleProdutoChange(index, value);
-                              }}
-                              value={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione um produto" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {produtos.map((produto) => (
-                                  <SelectItem
-                                    key={produto.id.toString()}
-                                    value={produto.id.toString()}
-                                  >
-                                    {produto.nome} -{" "}
-                                    {formatPrice(produto.preco)}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+              <Button
+                type="button"
+                onClick={addItem}
+                size="sm"
+                className="h-9 shrink-0"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Adicionar Item
+              </Button>
+            </div>
 
-                    <div className="w-24">
-                      <FormField
-                        control={form.control}
-                        name={`itens.${index}.quantidade`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Qtd *</FormLabel>
+            {/* Cabeçalho das colunas (desktop) */}
+            <div className="hidden flex-shrink-0 grid-cols-[minmax(0,1fr)_4.5rem_7rem_7rem_2.25rem] gap-3 px-2 text-xs font-medium text-gray-500 md:grid">
+              <span>Produto</span>
+              <span>Qtd</span>
+              <span>Preço Unit.</span>
+              <span className="text-right">Subtotal</span>
+              <span className="sr-only">Ações</span>
+            </div>
+
+            {/* Itens da venda: única área com rolagem */}
+            <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+              {fields.map((field, index) => (
+                <div
+                  key={field.id}
+                  className="rounded-lg border p-2 md:grid md:grid-cols-[minmax(0,1fr)_4.5rem_7rem_7rem_2.25rem] md:items-center md:gap-3"
+                >
+                  <div className="mb-2 md:mb-0">
+                    <FormField
+                      control={form.control}
+                      name={`itens.${index}.produtoId`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs text-gray-500 md:hidden">
+                            Produto *
+                          </FormLabel>
+                          <Select
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              handleProdutoChange(index, value);
+                            }}
+                            value={field.value}
+                          >
                             <FormControl>
-                              <Input
-                                type="number"
-                                min="1"
-                                {...field}
-                                onChange={(e) =>
-                                  field.onChange(parseInt(e.target.value) || 1)
-                                }
-                              />
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Selecione um produto" />
+                              </SelectTrigger>
                             </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                            <SelectContent>
+                              {produtos.map((produto) => (
+                                <SelectItem
+                                  key={produto.id.toString()}
+                                  value={produto.id.toString()}
+                                >
+                                  {produto.nome} - {formatPrice(produto.preco)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-                    <div className="w-32">
-                      <FormField
-                        control={form.control}
-                        name={`itens.${index}.precoUnitario`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Preço Unit. *</FormLabel>
-                            <FormControl>
-                              <Input
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                {...field}
-                                onChange={(e) =>
-                                  field.onChange(
-                                    parseFloat(e.target.value) || 0
-                                  )
-                                }
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                  {/* No desktop os campos abaixo entram direto no grid da linha */}
+                  <div className="grid grid-cols-[4.5rem_1fr_1fr_2.25rem] items-end gap-2 md:contents">
+                    <FormField
+                      control={form.control}
+                      name={`itens.${index}.quantidade`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs text-gray-500 md:hidden">
+                            Qtd *
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min="1"
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(parseInt(e.target.value) || 1)
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                    <div className="w-32">
-                      <FormLabel>Subtotal</FormLabel>
-                      <div className="h-10 flex items-center font-medium text-green-600">
+                    <FormField
+                      control={form.control}
+                      name={`itens.${index}.precoUnitario`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs text-gray-500 md:hidden">
+                            Preço Unit. *
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(parseFloat(e.target.value) || 0)
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div>
+                      <div className="text-xs text-gray-500 md:hidden">
+                        Subtotal
+                      </div>
+                      <div className="flex h-9 items-center font-medium text-green-600 md:justify-end">
                         {formatPrice(
                           form.watch(`itens.${index}.quantidade`) *
                             form.watch(`itens.${index}.precoUnitario`)
@@ -342,43 +356,51 @@ export function VendaForm({ open, onOpenChange, onSuccess }: VendaFormProps) {
 
                     <Button
                       type="button"
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
                       onClick={() => removeItem(index)}
                       disabled={fields.length === 1}
+                      className="h-9 w-9 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"
+                      title="Remover item"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                ))}
-
-                {/* Total */}
-                <div className="flex justify-end pt-4 border-t">
-                  <div className="text-right">
-                    <div className="text-lg font-semibold">
-                      Total: {formatPrice(calculateTotal())}
-                    </div>
-                  </div>
                 </div>
-              </CardContent>
-            </Card>
+              ))}
+            </div>
 
-            {/* Botões */}
-            <div className="flex justify-end space-x-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={isLoading}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                disabled={isLoading || calculateTotal() === 0}
-              >
-                {isLoading ? "Registrando..." : "Registrar Venda"}
-              </Button>
+            {/* Rodapé fixo: total e ações */}
+            <div className="flex flex-shrink-0 flex-col gap-3 border-t pt-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="text-lg font-semibold">
+                  Total:{" "}
+                  <span className="text-green-600">
+                    {formatPrice(calculateTotal())}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-500">
+                  {fields.length} {fields.length === 1 ? "produto" : "produtos"}{" "}
+                  • {totalItens} {totalItens === 1 ? "unidade" : "unidades"}
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  disabled={isLoading}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isLoading || calculateTotal() === 0}
+                >
+                  {isLoading ? "Registrando..." : "Registrar Venda"}
+                </Button>
+              </div>
             </div>
           </form>
         </Form>

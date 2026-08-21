@@ -49,6 +49,11 @@ export type Produto = $Result.DefaultSelection<Prisma.$ProdutoPayload>
  */
 export type Venda = $Result.DefaultSelection<Prisma.$VendaPayload>
 /**
+ * Model Pagamento
+ * 
+ */
+export type Pagamento = $Result.DefaultSelection<Prisma.$PagamentoPayload>
+/**
  * Model ItemVenda
  * 
  */
@@ -251,6 +256,16 @@ export class PrismaClient<
     * ```
     */
   get venda(): Prisma.VendaDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.pagamento`: Exposes CRUD operations for the **Pagamento** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more Pagamentos
+    * const pagamentos = await prisma.pagamento.findMany()
+    * ```
+    */
+  get pagamento(): Prisma.PagamentoDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.itemVenda`: Exposes CRUD operations for the **ItemVenda** model.
@@ -728,6 +743,7 @@ export namespace Prisma {
     Cliente: 'Cliente',
     Produto: 'Produto',
     Venda: 'Venda',
+    Pagamento: 'Pagamento',
     ItemVenda: 'ItemVenda',
     Devolucao: 'Devolucao',
     ItemDevolucao: 'ItemDevolucao'
@@ -749,7 +765,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "session" | "account" | "verification" | "cliente" | "produto" | "venda" | "itemVenda" | "devolucao" | "itemDevolucao"
+      modelProps: "user" | "session" | "account" | "verification" | "cliente" | "produto" | "venda" | "pagamento" | "itemVenda" | "devolucao" | "itemDevolucao"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1271,6 +1287,80 @@ export namespace Prisma {
           }
         }
       }
+      Pagamento: {
+        payload: Prisma.$PagamentoPayload<ExtArgs>
+        fields: Prisma.PagamentoFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PagamentoFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PagamentoPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PagamentoFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PagamentoPayload>
+          }
+          findFirst: {
+            args: Prisma.PagamentoFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PagamentoPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PagamentoFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PagamentoPayload>
+          }
+          findMany: {
+            args: Prisma.PagamentoFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PagamentoPayload>[]
+          }
+          create: {
+            args: Prisma.PagamentoCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PagamentoPayload>
+          }
+          createMany: {
+            args: Prisma.PagamentoCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PagamentoCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PagamentoPayload>[]
+          }
+          delete: {
+            args: Prisma.PagamentoDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PagamentoPayload>
+          }
+          update: {
+            args: Prisma.PagamentoUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PagamentoPayload>
+          }
+          deleteMany: {
+            args: Prisma.PagamentoDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PagamentoUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.PagamentoUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PagamentoPayload>[]
+          }
+          upsert: {
+            args: Prisma.PagamentoUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PagamentoPayload>
+          }
+          aggregate: {
+            args: Prisma.PagamentoAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePagamento>
+          }
+          groupBy: {
+            args: Prisma.PagamentoGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PagamentoGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PagamentoCountArgs<ExtArgs>
+            result: $Utils.Optional<PagamentoCountAggregateOutputType> | number
+          }
+        }
+      }
       ItemVenda: {
         payload: Prisma.$ItemVendaPayload<ExtArgs>
         fields: Prisma.ItemVendaFieldRefs
@@ -1592,6 +1682,7 @@ export namespace Prisma {
     cliente?: ClienteOmit
     produto?: ProdutoOmit
     venda?: VendaOmit
+    pagamento?: PagamentoOmit
     itemVenda?: ItemVendaOmit
     devolucao?: DevolucaoOmit
     itemDevolucao?: ItemDevolucaoOmit
@@ -1788,11 +1879,13 @@ export namespace Prisma {
   export type VendaCountOutputType = {
     itens: number
     devolucoes: number
+    pagamentos: number
   }
 
   export type VendaCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     itens?: boolean | VendaCountOutputTypeCountItensArgs
     devolucoes?: boolean | VendaCountOutputTypeCountDevolucoesArgs
+    pagamentos?: boolean | VendaCountOutputTypeCountPagamentosArgs
   }
 
   // Custom InputTypes
@@ -1818,6 +1911,13 @@ export namespace Prisma {
    */
   export type VendaCountOutputTypeCountDevolucoesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: DevolucaoWhereInput
+  }
+
+  /**
+   * VendaCountOutputType without action
+   */
+  export type VendaCountOutputTypeCountPagamentosArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PagamentoWhereInput
   }
 
 
@@ -8649,6 +8749,7 @@ export namespace Prisma {
     cliente?: boolean | Venda$clienteArgs<ExtArgs>
     itens?: boolean | Venda$itensArgs<ExtArgs>
     devolucoes?: boolean | Venda$devolucoesArgs<ExtArgs>
+    pagamentos?: boolean | Venda$pagamentosArgs<ExtArgs>
     _count?: boolean | VendaCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["venda"]>
 
@@ -8680,6 +8781,7 @@ export namespace Prisma {
     cliente?: boolean | Venda$clienteArgs<ExtArgs>
     itens?: boolean | Venda$itensArgs<ExtArgs>
     devolucoes?: boolean | Venda$devolucoesArgs<ExtArgs>
+    pagamentos?: boolean | Venda$pagamentosArgs<ExtArgs>
     _count?: boolean | VendaCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type VendaIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -8695,6 +8797,7 @@ export namespace Prisma {
       cliente: Prisma.$ClientePayload<ExtArgs> | null
       itens: Prisma.$ItemVendaPayload<ExtArgs>[]
       devolucoes: Prisma.$DevolucaoPayload<ExtArgs>[]
+      pagamentos: Prisma.$PagamentoPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: bigint
@@ -9098,6 +9201,7 @@ export namespace Prisma {
     cliente<T extends Venda$clienteArgs<ExtArgs> = {}>(args?: Subset<T, Venda$clienteArgs<ExtArgs>>): Prisma__ClienteClient<$Result.GetResult<Prisma.$ClientePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     itens<T extends Venda$itensArgs<ExtArgs> = {}>(args?: Subset<T, Venda$itensArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ItemVendaPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     devolucoes<T extends Venda$devolucoesArgs<ExtArgs> = {}>(args?: Subset<T, Venda$devolucoesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DevolucaoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    pagamentos<T extends Venda$pagamentosArgs<ExtArgs> = {}>(args?: Subset<T, Venda$pagamentosArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PagamentoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -9594,6 +9698,30 @@ export namespace Prisma {
   }
 
   /**
+   * Venda.pagamentos
+   */
+  export type Venda$pagamentosArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Pagamento
+     */
+    select?: PagamentoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Pagamento
+     */
+    omit?: PagamentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoInclude<ExtArgs> | null
+    where?: PagamentoWhereInput
+    orderBy?: PagamentoOrderByWithRelationInput | PagamentoOrderByWithRelationInput[]
+    cursor?: PagamentoWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PagamentoScalarFieldEnum | PagamentoScalarFieldEnum[]
+  }
+
+  /**
    * Venda without action
    */
   export type VendaDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -9609,6 +9737,1119 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: VendaInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model Pagamento
+   */
+
+  export type AggregatePagamento = {
+    _count: PagamentoCountAggregateOutputType | null
+    _avg: PagamentoAvgAggregateOutputType | null
+    _sum: PagamentoSumAggregateOutputType | null
+    _min: PagamentoMinAggregateOutputType | null
+    _max: PagamentoMaxAggregateOutputType | null
+  }
+
+  export type PagamentoAvgAggregateOutputType = {
+    id: number | null
+    vendaId: number | null
+    valor: Decimal | null
+  }
+
+  export type PagamentoSumAggregateOutputType = {
+    id: bigint | null
+    vendaId: bigint | null
+    valor: Decimal | null
+  }
+
+  export type PagamentoMinAggregateOutputType = {
+    id: bigint | null
+    vendaId: bigint | null
+    valor: Decimal | null
+    formaPagamento: string | null
+    observacao: string | null
+    dataPagamento: Date | null
+  }
+
+  export type PagamentoMaxAggregateOutputType = {
+    id: bigint | null
+    vendaId: bigint | null
+    valor: Decimal | null
+    formaPagamento: string | null
+    observacao: string | null
+    dataPagamento: Date | null
+  }
+
+  export type PagamentoCountAggregateOutputType = {
+    id: number
+    vendaId: number
+    valor: number
+    formaPagamento: number
+    observacao: number
+    dataPagamento: number
+    _all: number
+  }
+
+
+  export type PagamentoAvgAggregateInputType = {
+    id?: true
+    vendaId?: true
+    valor?: true
+  }
+
+  export type PagamentoSumAggregateInputType = {
+    id?: true
+    vendaId?: true
+    valor?: true
+  }
+
+  export type PagamentoMinAggregateInputType = {
+    id?: true
+    vendaId?: true
+    valor?: true
+    formaPagamento?: true
+    observacao?: true
+    dataPagamento?: true
+  }
+
+  export type PagamentoMaxAggregateInputType = {
+    id?: true
+    vendaId?: true
+    valor?: true
+    formaPagamento?: true
+    observacao?: true
+    dataPagamento?: true
+  }
+
+  export type PagamentoCountAggregateInputType = {
+    id?: true
+    vendaId?: true
+    valor?: true
+    formaPagamento?: true
+    observacao?: true
+    dataPagamento?: true
+    _all?: true
+  }
+
+  export type PagamentoAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Pagamento to aggregate.
+     */
+    where?: PagamentoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Pagamentos to fetch.
+     */
+    orderBy?: PagamentoOrderByWithRelationInput | PagamentoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PagamentoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Pagamentos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Pagamentos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned Pagamentos
+    **/
+    _count?: true | PagamentoCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: PagamentoAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: PagamentoSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PagamentoMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PagamentoMaxAggregateInputType
+  }
+
+  export type GetPagamentoAggregateType<T extends PagamentoAggregateArgs> = {
+        [P in keyof T & keyof AggregatePagamento]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePagamento[P]>
+      : GetScalarType<T[P], AggregatePagamento[P]>
+  }
+
+
+
+
+  export type PagamentoGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PagamentoWhereInput
+    orderBy?: PagamentoOrderByWithAggregationInput | PagamentoOrderByWithAggregationInput[]
+    by: PagamentoScalarFieldEnum[] | PagamentoScalarFieldEnum
+    having?: PagamentoScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PagamentoCountAggregateInputType | true
+    _avg?: PagamentoAvgAggregateInputType
+    _sum?: PagamentoSumAggregateInputType
+    _min?: PagamentoMinAggregateInputType
+    _max?: PagamentoMaxAggregateInputType
+  }
+
+  export type PagamentoGroupByOutputType = {
+    id: bigint
+    vendaId: bigint
+    valor: Decimal
+    formaPagamento: string | null
+    observacao: string | null
+    dataPagamento: Date
+    _count: PagamentoCountAggregateOutputType | null
+    _avg: PagamentoAvgAggregateOutputType | null
+    _sum: PagamentoSumAggregateOutputType | null
+    _min: PagamentoMinAggregateOutputType | null
+    _max: PagamentoMaxAggregateOutputType | null
+  }
+
+  type GetPagamentoGroupByPayload<T extends PagamentoGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PagamentoGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PagamentoGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PagamentoGroupByOutputType[P]>
+            : GetScalarType<T[P], PagamentoGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PagamentoSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    vendaId?: boolean
+    valor?: boolean
+    formaPagamento?: boolean
+    observacao?: boolean
+    dataPagamento?: boolean
+    venda?: boolean | VendaDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["pagamento"]>
+
+  export type PagamentoSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    vendaId?: boolean
+    valor?: boolean
+    formaPagamento?: boolean
+    observacao?: boolean
+    dataPagamento?: boolean
+    venda?: boolean | VendaDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["pagamento"]>
+
+  export type PagamentoSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    vendaId?: boolean
+    valor?: boolean
+    formaPagamento?: boolean
+    observacao?: boolean
+    dataPagamento?: boolean
+    venda?: boolean | VendaDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["pagamento"]>
+
+  export type PagamentoSelectScalar = {
+    id?: boolean
+    vendaId?: boolean
+    valor?: boolean
+    formaPagamento?: boolean
+    observacao?: boolean
+    dataPagamento?: boolean
+  }
+
+  export type PagamentoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "vendaId" | "valor" | "formaPagamento" | "observacao" | "dataPagamento", ExtArgs["result"]["pagamento"]>
+  export type PagamentoInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    venda?: boolean | VendaDefaultArgs<ExtArgs>
+  }
+  export type PagamentoIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    venda?: boolean | VendaDefaultArgs<ExtArgs>
+  }
+  export type PagamentoIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    venda?: boolean | VendaDefaultArgs<ExtArgs>
+  }
+
+  export type $PagamentoPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "Pagamento"
+    objects: {
+      venda: Prisma.$VendaPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: bigint
+      vendaId: bigint
+      valor: Prisma.Decimal
+      formaPagamento: string | null
+      observacao: string | null
+      dataPagamento: Date
+    }, ExtArgs["result"]["pagamento"]>
+    composites: {}
+  }
+
+  type PagamentoGetPayload<S extends boolean | null | undefined | PagamentoDefaultArgs> = $Result.GetResult<Prisma.$PagamentoPayload, S>
+
+  type PagamentoCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<PagamentoFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: PagamentoCountAggregateInputType | true
+    }
+
+  export interface PagamentoDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['Pagamento'], meta: { name: 'Pagamento' } }
+    /**
+     * Find zero or one Pagamento that matches the filter.
+     * @param {PagamentoFindUniqueArgs} args - Arguments to find a Pagamento
+     * @example
+     * // Get one Pagamento
+     * const pagamento = await prisma.pagamento.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PagamentoFindUniqueArgs>(args: SelectSubset<T, PagamentoFindUniqueArgs<ExtArgs>>): Prisma__PagamentoClient<$Result.GetResult<Prisma.$PagamentoPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one Pagamento that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {PagamentoFindUniqueOrThrowArgs} args - Arguments to find a Pagamento
+     * @example
+     * // Get one Pagamento
+     * const pagamento = await prisma.pagamento.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PagamentoFindUniqueOrThrowArgs>(args: SelectSubset<T, PagamentoFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PagamentoClient<$Result.GetResult<Prisma.$PagamentoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Pagamento that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PagamentoFindFirstArgs} args - Arguments to find a Pagamento
+     * @example
+     * // Get one Pagamento
+     * const pagamento = await prisma.pagamento.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PagamentoFindFirstArgs>(args?: SelectSubset<T, PagamentoFindFirstArgs<ExtArgs>>): Prisma__PagamentoClient<$Result.GetResult<Prisma.$PagamentoPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first Pagamento that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PagamentoFindFirstOrThrowArgs} args - Arguments to find a Pagamento
+     * @example
+     * // Get one Pagamento
+     * const pagamento = await prisma.pagamento.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PagamentoFindFirstOrThrowArgs>(args?: SelectSubset<T, PagamentoFindFirstOrThrowArgs<ExtArgs>>): Prisma__PagamentoClient<$Result.GetResult<Prisma.$PagamentoPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more Pagamentos that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PagamentoFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all Pagamentos
+     * const pagamentos = await prisma.pagamento.findMany()
+     * 
+     * // Get first 10 Pagamentos
+     * const pagamentos = await prisma.pagamento.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const pagamentoWithIdOnly = await prisma.pagamento.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends PagamentoFindManyArgs>(args?: SelectSubset<T, PagamentoFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PagamentoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a Pagamento.
+     * @param {PagamentoCreateArgs} args - Arguments to create a Pagamento.
+     * @example
+     * // Create one Pagamento
+     * const Pagamento = await prisma.pagamento.create({
+     *   data: {
+     *     // ... data to create a Pagamento
+     *   }
+     * })
+     * 
+     */
+    create<T extends PagamentoCreateArgs>(args: SelectSubset<T, PagamentoCreateArgs<ExtArgs>>): Prisma__PagamentoClient<$Result.GetResult<Prisma.$PagamentoPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many Pagamentos.
+     * @param {PagamentoCreateManyArgs} args - Arguments to create many Pagamentos.
+     * @example
+     * // Create many Pagamentos
+     * const pagamento = await prisma.pagamento.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PagamentoCreateManyArgs>(args?: SelectSubset<T, PagamentoCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many Pagamentos and returns the data saved in the database.
+     * @param {PagamentoCreateManyAndReturnArgs} args - Arguments to create many Pagamentos.
+     * @example
+     * // Create many Pagamentos
+     * const pagamento = await prisma.pagamento.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many Pagamentos and only return the `id`
+     * const pagamentoWithIdOnly = await prisma.pagamento.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PagamentoCreateManyAndReturnArgs>(args?: SelectSubset<T, PagamentoCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PagamentoPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a Pagamento.
+     * @param {PagamentoDeleteArgs} args - Arguments to delete one Pagamento.
+     * @example
+     * // Delete one Pagamento
+     * const Pagamento = await prisma.pagamento.delete({
+     *   where: {
+     *     // ... filter to delete one Pagamento
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PagamentoDeleteArgs>(args: SelectSubset<T, PagamentoDeleteArgs<ExtArgs>>): Prisma__PagamentoClient<$Result.GetResult<Prisma.$PagamentoPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one Pagamento.
+     * @param {PagamentoUpdateArgs} args - Arguments to update one Pagamento.
+     * @example
+     * // Update one Pagamento
+     * const pagamento = await prisma.pagamento.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PagamentoUpdateArgs>(args: SelectSubset<T, PagamentoUpdateArgs<ExtArgs>>): Prisma__PagamentoClient<$Result.GetResult<Prisma.$PagamentoPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more Pagamentos.
+     * @param {PagamentoDeleteManyArgs} args - Arguments to filter Pagamentos to delete.
+     * @example
+     * // Delete a few Pagamentos
+     * const { count } = await prisma.pagamento.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PagamentoDeleteManyArgs>(args?: SelectSubset<T, PagamentoDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Pagamentos.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PagamentoUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many Pagamentos
+     * const pagamento = await prisma.pagamento.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PagamentoUpdateManyArgs>(args: SelectSubset<T, PagamentoUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more Pagamentos and returns the data updated in the database.
+     * @param {PagamentoUpdateManyAndReturnArgs} args - Arguments to update many Pagamentos.
+     * @example
+     * // Update many Pagamentos
+     * const pagamento = await prisma.pagamento.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more Pagamentos and only return the `id`
+     * const pagamentoWithIdOnly = await prisma.pagamento.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends PagamentoUpdateManyAndReturnArgs>(args: SelectSubset<T, PagamentoUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PagamentoPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one Pagamento.
+     * @param {PagamentoUpsertArgs} args - Arguments to update or create a Pagamento.
+     * @example
+     * // Update or create a Pagamento
+     * const pagamento = await prisma.pagamento.upsert({
+     *   create: {
+     *     // ... data to create a Pagamento
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the Pagamento we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PagamentoUpsertArgs>(args: SelectSubset<T, PagamentoUpsertArgs<ExtArgs>>): Prisma__PagamentoClient<$Result.GetResult<Prisma.$PagamentoPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of Pagamentos.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PagamentoCountArgs} args - Arguments to filter Pagamentos to count.
+     * @example
+     * // Count the number of Pagamentos
+     * const count = await prisma.pagamento.count({
+     *   where: {
+     *     // ... the filter for the Pagamentos we want to count
+     *   }
+     * })
+    **/
+    count<T extends PagamentoCountArgs>(
+      args?: Subset<T, PagamentoCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PagamentoCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a Pagamento.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PagamentoAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PagamentoAggregateArgs>(args: Subset<T, PagamentoAggregateArgs>): Prisma.PrismaPromise<GetPagamentoAggregateType<T>>
+
+    /**
+     * Group by Pagamento.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PagamentoGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PagamentoGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PagamentoGroupByArgs['orderBy'] }
+        : { orderBy?: PagamentoGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PagamentoGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPagamentoGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the Pagamento model
+   */
+  readonly fields: PagamentoFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for Pagamento.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PagamentoClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    venda<T extends VendaDefaultArgs<ExtArgs> = {}>(args?: Subset<T, VendaDefaultArgs<ExtArgs>>): Prisma__VendaClient<$Result.GetResult<Prisma.$VendaPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the Pagamento model
+   */
+  interface PagamentoFieldRefs {
+    readonly id: FieldRef<"Pagamento", 'BigInt'>
+    readonly vendaId: FieldRef<"Pagamento", 'BigInt'>
+    readonly valor: FieldRef<"Pagamento", 'Decimal'>
+    readonly formaPagamento: FieldRef<"Pagamento", 'String'>
+    readonly observacao: FieldRef<"Pagamento", 'String'>
+    readonly dataPagamento: FieldRef<"Pagamento", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * Pagamento findUnique
+   */
+  export type PagamentoFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Pagamento
+     */
+    select?: PagamentoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Pagamento
+     */
+    omit?: PagamentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoInclude<ExtArgs> | null
+    /**
+     * Filter, which Pagamento to fetch.
+     */
+    where: PagamentoWhereUniqueInput
+  }
+
+  /**
+   * Pagamento findUniqueOrThrow
+   */
+  export type PagamentoFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Pagamento
+     */
+    select?: PagamentoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Pagamento
+     */
+    omit?: PagamentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoInclude<ExtArgs> | null
+    /**
+     * Filter, which Pagamento to fetch.
+     */
+    where: PagamentoWhereUniqueInput
+  }
+
+  /**
+   * Pagamento findFirst
+   */
+  export type PagamentoFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Pagamento
+     */
+    select?: PagamentoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Pagamento
+     */
+    omit?: PagamentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoInclude<ExtArgs> | null
+    /**
+     * Filter, which Pagamento to fetch.
+     */
+    where?: PagamentoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Pagamentos to fetch.
+     */
+    orderBy?: PagamentoOrderByWithRelationInput | PagamentoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Pagamentos.
+     */
+    cursor?: PagamentoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Pagamentos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Pagamentos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Pagamentos.
+     */
+    distinct?: PagamentoScalarFieldEnum | PagamentoScalarFieldEnum[]
+  }
+
+  /**
+   * Pagamento findFirstOrThrow
+   */
+  export type PagamentoFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Pagamento
+     */
+    select?: PagamentoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Pagamento
+     */
+    omit?: PagamentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoInclude<ExtArgs> | null
+    /**
+     * Filter, which Pagamento to fetch.
+     */
+    where?: PagamentoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Pagamentos to fetch.
+     */
+    orderBy?: PagamentoOrderByWithRelationInput | PagamentoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for Pagamentos.
+     */
+    cursor?: PagamentoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Pagamentos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Pagamentos.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of Pagamentos.
+     */
+    distinct?: PagamentoScalarFieldEnum | PagamentoScalarFieldEnum[]
+  }
+
+  /**
+   * Pagamento findMany
+   */
+  export type PagamentoFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Pagamento
+     */
+    select?: PagamentoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Pagamento
+     */
+    omit?: PagamentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoInclude<ExtArgs> | null
+    /**
+     * Filter, which Pagamentos to fetch.
+     */
+    where?: PagamentoWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of Pagamentos to fetch.
+     */
+    orderBy?: PagamentoOrderByWithRelationInput | PagamentoOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing Pagamentos.
+     */
+    cursor?: PagamentoWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` Pagamentos from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` Pagamentos.
+     */
+    skip?: number
+    distinct?: PagamentoScalarFieldEnum | PagamentoScalarFieldEnum[]
+  }
+
+  /**
+   * Pagamento create
+   */
+  export type PagamentoCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Pagamento
+     */
+    select?: PagamentoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Pagamento
+     */
+    omit?: PagamentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoInclude<ExtArgs> | null
+    /**
+     * The data needed to create a Pagamento.
+     */
+    data: XOR<PagamentoCreateInput, PagamentoUncheckedCreateInput>
+  }
+
+  /**
+   * Pagamento createMany
+   */
+  export type PagamentoCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many Pagamentos.
+     */
+    data: PagamentoCreateManyInput | PagamentoCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * Pagamento createManyAndReturn
+   */
+  export type PagamentoCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Pagamento
+     */
+    select?: PagamentoSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Pagamento
+     */
+    omit?: PagamentoOmit<ExtArgs> | null
+    /**
+     * The data used to create many Pagamentos.
+     */
+    data: PagamentoCreateManyInput | PagamentoCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Pagamento update
+   */
+  export type PagamentoUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Pagamento
+     */
+    select?: PagamentoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Pagamento
+     */
+    omit?: PagamentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoInclude<ExtArgs> | null
+    /**
+     * The data needed to update a Pagamento.
+     */
+    data: XOR<PagamentoUpdateInput, PagamentoUncheckedUpdateInput>
+    /**
+     * Choose, which Pagamento to update.
+     */
+    where: PagamentoWhereUniqueInput
+  }
+
+  /**
+   * Pagamento updateMany
+   */
+  export type PagamentoUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update Pagamentos.
+     */
+    data: XOR<PagamentoUpdateManyMutationInput, PagamentoUncheckedUpdateManyInput>
+    /**
+     * Filter which Pagamentos to update
+     */
+    where?: PagamentoWhereInput
+    /**
+     * Limit how many Pagamentos to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * Pagamento updateManyAndReturn
+   */
+  export type PagamentoUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Pagamento
+     */
+    select?: PagamentoSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the Pagamento
+     */
+    omit?: PagamentoOmit<ExtArgs> | null
+    /**
+     * The data used to update Pagamentos.
+     */
+    data: XOR<PagamentoUpdateManyMutationInput, PagamentoUncheckedUpdateManyInput>
+    /**
+     * Filter which Pagamentos to update
+     */
+    where?: PagamentoWhereInput
+    /**
+     * Limit how many Pagamentos to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * Pagamento upsert
+   */
+  export type PagamentoUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Pagamento
+     */
+    select?: PagamentoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Pagamento
+     */
+    omit?: PagamentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoInclude<ExtArgs> | null
+    /**
+     * The filter to search for the Pagamento to update in case it exists.
+     */
+    where: PagamentoWhereUniqueInput
+    /**
+     * In case the Pagamento found by the `where` argument doesn't exist, create a new Pagamento with this data.
+     */
+    create: XOR<PagamentoCreateInput, PagamentoUncheckedCreateInput>
+    /**
+     * In case the Pagamento was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PagamentoUpdateInput, PagamentoUncheckedUpdateInput>
+  }
+
+  /**
+   * Pagamento delete
+   */
+  export type PagamentoDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Pagamento
+     */
+    select?: PagamentoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Pagamento
+     */
+    omit?: PagamentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoInclude<ExtArgs> | null
+    /**
+     * Filter which Pagamento to delete.
+     */
+    where: PagamentoWhereUniqueInput
+  }
+
+  /**
+   * Pagamento deleteMany
+   */
+  export type PagamentoDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which Pagamentos to delete
+     */
+    where?: PagamentoWhereInput
+    /**
+     * Limit how many Pagamentos to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * Pagamento without action
+   */
+  export type PagamentoDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Pagamento
+     */
+    select?: PagamentoSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Pagamento
+     */
+    omit?: PagamentoOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PagamentoInclude<ExtArgs> | null
   }
 
 
@@ -13062,6 +14303,18 @@ export namespace Prisma {
   export type VendaScalarFieldEnum = (typeof VendaScalarFieldEnum)[keyof typeof VendaScalarFieldEnum]
 
 
+  export const PagamentoScalarFieldEnum: {
+    id: 'id',
+    vendaId: 'vendaId',
+    valor: 'valor',
+    formaPagamento: 'formaPagamento',
+    observacao: 'observacao',
+    dataPagamento: 'dataPagamento'
+  };
+
+  export type PagamentoScalarFieldEnum = (typeof PagamentoScalarFieldEnum)[keyof typeof PagamentoScalarFieldEnum]
+
+
   export const ItemVendaScalarFieldEnum: {
     id: 'id',
     vendaId: 'vendaId',
@@ -13620,6 +14873,7 @@ export namespace Prisma {
     cliente?: XOR<ClienteNullableScalarRelationFilter, ClienteWhereInput> | null
     itens?: ItemVendaListRelationFilter
     devolucoes?: DevolucaoListRelationFilter
+    pagamentos?: PagamentoListRelationFilter
   }
 
   export type VendaOrderByWithRelationInput = {
@@ -13630,6 +14884,7 @@ export namespace Prisma {
     cliente?: ClienteOrderByWithRelationInput
     itens?: ItemVendaOrderByRelationAggregateInput
     devolucoes?: DevolucaoOrderByRelationAggregateInput
+    pagamentos?: PagamentoOrderByRelationAggregateInput
   }
 
   export type VendaWhereUniqueInput = Prisma.AtLeast<{
@@ -13643,6 +14898,7 @@ export namespace Prisma {
     cliente?: XOR<ClienteNullableScalarRelationFilter, ClienteWhereInput> | null
     itens?: ItemVendaListRelationFilter
     devolucoes?: DevolucaoListRelationFilter
+    pagamentos?: PagamentoListRelationFilter
   }, "id">
 
   export type VendaOrderByWithAggregationInput = {
@@ -13665,6 +14921,68 @@ export namespace Prisma {
     clienteId?: BigIntNullableWithAggregatesFilter<"Venda"> | bigint | number | null
     dataVenda?: DateTimeWithAggregatesFilter<"Venda"> | Date | string
     total?: DecimalWithAggregatesFilter<"Venda"> | Decimal | DecimalJsLike | number | string
+  }
+
+  export type PagamentoWhereInput = {
+    AND?: PagamentoWhereInput | PagamentoWhereInput[]
+    OR?: PagamentoWhereInput[]
+    NOT?: PagamentoWhereInput | PagamentoWhereInput[]
+    id?: BigIntFilter<"Pagamento"> | bigint | number
+    vendaId?: BigIntFilter<"Pagamento"> | bigint | number
+    valor?: DecimalFilter<"Pagamento"> | Decimal | DecimalJsLike | number | string
+    formaPagamento?: StringNullableFilter<"Pagamento"> | string | null
+    observacao?: StringNullableFilter<"Pagamento"> | string | null
+    dataPagamento?: DateTimeFilter<"Pagamento"> | Date | string
+    venda?: XOR<VendaScalarRelationFilter, VendaWhereInput>
+  }
+
+  export type PagamentoOrderByWithRelationInput = {
+    id?: SortOrder
+    vendaId?: SortOrder
+    valor?: SortOrder
+    formaPagamento?: SortOrderInput | SortOrder
+    observacao?: SortOrderInput | SortOrder
+    dataPagamento?: SortOrder
+    venda?: VendaOrderByWithRelationInput
+  }
+
+  export type PagamentoWhereUniqueInput = Prisma.AtLeast<{
+    id?: bigint | number
+    AND?: PagamentoWhereInput | PagamentoWhereInput[]
+    OR?: PagamentoWhereInput[]
+    NOT?: PagamentoWhereInput | PagamentoWhereInput[]
+    vendaId?: BigIntFilter<"Pagamento"> | bigint | number
+    valor?: DecimalFilter<"Pagamento"> | Decimal | DecimalJsLike | number | string
+    formaPagamento?: StringNullableFilter<"Pagamento"> | string | null
+    observacao?: StringNullableFilter<"Pagamento"> | string | null
+    dataPagamento?: DateTimeFilter<"Pagamento"> | Date | string
+    venda?: XOR<VendaScalarRelationFilter, VendaWhereInput>
+  }, "id">
+
+  export type PagamentoOrderByWithAggregationInput = {
+    id?: SortOrder
+    vendaId?: SortOrder
+    valor?: SortOrder
+    formaPagamento?: SortOrderInput | SortOrder
+    observacao?: SortOrderInput | SortOrder
+    dataPagamento?: SortOrder
+    _count?: PagamentoCountOrderByAggregateInput
+    _avg?: PagamentoAvgOrderByAggregateInput
+    _max?: PagamentoMaxOrderByAggregateInput
+    _min?: PagamentoMinOrderByAggregateInput
+    _sum?: PagamentoSumOrderByAggregateInput
+  }
+
+  export type PagamentoScalarWhereWithAggregatesInput = {
+    AND?: PagamentoScalarWhereWithAggregatesInput | PagamentoScalarWhereWithAggregatesInput[]
+    OR?: PagamentoScalarWhereWithAggregatesInput[]
+    NOT?: PagamentoScalarWhereWithAggregatesInput | PagamentoScalarWhereWithAggregatesInput[]
+    id?: BigIntWithAggregatesFilter<"Pagamento"> | bigint | number
+    vendaId?: BigIntWithAggregatesFilter<"Pagamento"> | bigint | number
+    valor?: DecimalWithAggregatesFilter<"Pagamento"> | Decimal | DecimalJsLike | number | string
+    formaPagamento?: StringNullableWithAggregatesFilter<"Pagamento"> | string | null
+    observacao?: StringNullableWithAggregatesFilter<"Pagamento"> | string | null
+    dataPagamento?: DateTimeWithAggregatesFilter<"Pagamento"> | Date | string
   }
 
   export type ItemVendaWhereInput = {
@@ -14280,6 +15598,7 @@ export namespace Prisma {
     cliente?: ClienteCreateNestedOneWithoutVendasInput
     itens?: ItemVendaCreateNestedManyWithoutVendaInput
     devolucoes?: DevolucaoCreateNestedManyWithoutVendaInput
+    pagamentos?: PagamentoCreateNestedManyWithoutVendaInput
   }
 
   export type VendaUncheckedCreateInput = {
@@ -14289,6 +15608,7 @@ export namespace Prisma {
     total: Decimal | DecimalJsLike | number | string
     itens?: ItemVendaUncheckedCreateNestedManyWithoutVendaInput
     devolucoes?: DevolucaoUncheckedCreateNestedManyWithoutVendaInput
+    pagamentos?: PagamentoUncheckedCreateNestedManyWithoutVendaInput
   }
 
   export type VendaUpdateInput = {
@@ -14298,6 +15618,7 @@ export namespace Prisma {
     cliente?: ClienteUpdateOneWithoutVendasNestedInput
     itens?: ItemVendaUpdateManyWithoutVendaNestedInput
     devolucoes?: DevolucaoUpdateManyWithoutVendaNestedInput
+    pagamentos?: PagamentoUpdateManyWithoutVendaNestedInput
   }
 
   export type VendaUncheckedUpdateInput = {
@@ -14307,6 +15628,7 @@ export namespace Prisma {
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     itens?: ItemVendaUncheckedUpdateManyWithoutVendaNestedInput
     devolucoes?: DevolucaoUncheckedUpdateManyWithoutVendaNestedInput
+    pagamentos?: PagamentoUncheckedUpdateManyWithoutVendaNestedInput
   }
 
   export type VendaCreateManyInput = {
@@ -14327,6 +15649,68 @@ export namespace Prisma {
     clienteId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
     dataVenda?: DateTimeFieldUpdateOperationsInput | Date | string
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+  }
+
+  export type PagamentoCreateInput = {
+    id?: bigint | number
+    valor: Decimal | DecimalJsLike | number | string
+    formaPagamento?: string | null
+    observacao?: string | null
+    dataPagamento?: Date | string
+    venda: VendaCreateNestedOneWithoutPagamentosInput
+  }
+
+  export type PagamentoUncheckedCreateInput = {
+    id?: bigint | number
+    vendaId: bigint | number
+    valor: Decimal | DecimalJsLike | number | string
+    formaPagamento?: string | null
+    observacao?: string | null
+    dataPagamento?: Date | string
+  }
+
+  export type PagamentoUpdateInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    valor?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    formaPagamento?: NullableStringFieldUpdateOperationsInput | string | null
+    observacao?: NullableStringFieldUpdateOperationsInput | string | null
+    dataPagamento?: DateTimeFieldUpdateOperationsInput | Date | string
+    venda?: VendaUpdateOneRequiredWithoutPagamentosNestedInput
+  }
+
+  export type PagamentoUncheckedUpdateInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    vendaId?: BigIntFieldUpdateOperationsInput | bigint | number
+    valor?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    formaPagamento?: NullableStringFieldUpdateOperationsInput | string | null
+    observacao?: NullableStringFieldUpdateOperationsInput | string | null
+    dataPagamento?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PagamentoCreateManyInput = {
+    id?: bigint | number
+    vendaId: bigint | number
+    valor: Decimal | DecimalJsLike | number | string
+    formaPagamento?: string | null
+    observacao?: string | null
+    dataPagamento?: Date | string
+  }
+
+  export type PagamentoUpdateManyMutationInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    valor?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    formaPagamento?: NullableStringFieldUpdateOperationsInput | string | null
+    observacao?: NullableStringFieldUpdateOperationsInput | string | null
+    dataPagamento?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PagamentoUncheckedUpdateManyInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    vendaId?: BigIntFieldUpdateOperationsInput | bigint | number
+    valor?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    formaPagamento?: NullableStringFieldUpdateOperationsInput | string | null
+    observacao?: NullableStringFieldUpdateOperationsInput | string | null
+    dataPagamento?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ItemVendaCreateInput = {
@@ -14949,7 +16333,17 @@ export namespace Prisma {
     none?: DevolucaoWhereInput
   }
 
+  export type PagamentoListRelationFilter = {
+    every?: PagamentoWhereInput
+    some?: PagamentoWhereInput
+    none?: PagamentoWhereInput
+  }
+
   export type DevolucaoOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type PagamentoOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -15002,6 +16396,50 @@ export namespace Prisma {
     _max?: NestedBigIntNullableFilter<$PrismaModel>
   }
 
+  export type VendaScalarRelationFilter = {
+    is?: VendaWhereInput
+    isNot?: VendaWhereInput
+  }
+
+  export type PagamentoCountOrderByAggregateInput = {
+    id?: SortOrder
+    vendaId?: SortOrder
+    valor?: SortOrder
+    formaPagamento?: SortOrder
+    observacao?: SortOrder
+    dataPagamento?: SortOrder
+  }
+
+  export type PagamentoAvgOrderByAggregateInput = {
+    id?: SortOrder
+    vendaId?: SortOrder
+    valor?: SortOrder
+  }
+
+  export type PagamentoMaxOrderByAggregateInput = {
+    id?: SortOrder
+    vendaId?: SortOrder
+    valor?: SortOrder
+    formaPagamento?: SortOrder
+    observacao?: SortOrder
+    dataPagamento?: SortOrder
+  }
+
+  export type PagamentoMinOrderByAggregateInput = {
+    id?: SortOrder
+    vendaId?: SortOrder
+    valor?: SortOrder
+    formaPagamento?: SortOrder
+    observacao?: SortOrder
+    dataPagamento?: SortOrder
+  }
+
+  export type PagamentoSumOrderByAggregateInput = {
+    id?: SortOrder
+    vendaId?: SortOrder
+    valor?: SortOrder
+  }
+
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -15011,11 +16449,6 @@ export namespace Prisma {
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntFilter<$PrismaModel> | number
-  }
-
-  export type VendaScalarRelationFilter = {
-    is?: VendaWhereInput
-    isNot?: VendaWhereInput
   }
 
   export type ProdutoScalarRelationFilter = {
@@ -15451,6 +16884,13 @@ export namespace Prisma {
     connect?: DevolucaoWhereUniqueInput | DevolucaoWhereUniqueInput[]
   }
 
+  export type PagamentoCreateNestedManyWithoutVendaInput = {
+    create?: XOR<PagamentoCreateWithoutVendaInput, PagamentoUncheckedCreateWithoutVendaInput> | PagamentoCreateWithoutVendaInput[] | PagamentoUncheckedCreateWithoutVendaInput[]
+    connectOrCreate?: PagamentoCreateOrConnectWithoutVendaInput | PagamentoCreateOrConnectWithoutVendaInput[]
+    createMany?: PagamentoCreateManyVendaInputEnvelope
+    connect?: PagamentoWhereUniqueInput | PagamentoWhereUniqueInput[]
+  }
+
   export type ItemVendaUncheckedCreateNestedManyWithoutVendaInput = {
     create?: XOR<ItemVendaCreateWithoutVendaInput, ItemVendaUncheckedCreateWithoutVendaInput> | ItemVendaCreateWithoutVendaInput[] | ItemVendaUncheckedCreateWithoutVendaInput[]
     connectOrCreate?: ItemVendaCreateOrConnectWithoutVendaInput | ItemVendaCreateOrConnectWithoutVendaInput[]
@@ -15463,6 +16903,13 @@ export namespace Prisma {
     connectOrCreate?: DevolucaoCreateOrConnectWithoutVendaInput | DevolucaoCreateOrConnectWithoutVendaInput[]
     createMany?: DevolucaoCreateManyVendaInputEnvelope
     connect?: DevolucaoWhereUniqueInput | DevolucaoWhereUniqueInput[]
+  }
+
+  export type PagamentoUncheckedCreateNestedManyWithoutVendaInput = {
+    create?: XOR<PagamentoCreateWithoutVendaInput, PagamentoUncheckedCreateWithoutVendaInput> | PagamentoCreateWithoutVendaInput[] | PagamentoUncheckedCreateWithoutVendaInput[]
+    connectOrCreate?: PagamentoCreateOrConnectWithoutVendaInput | PagamentoCreateOrConnectWithoutVendaInput[]
+    createMany?: PagamentoCreateManyVendaInputEnvelope
+    connect?: PagamentoWhereUniqueInput | PagamentoWhereUniqueInput[]
   }
 
   export type ClienteUpdateOneWithoutVendasNestedInput = {
@@ -15503,6 +16950,20 @@ export namespace Prisma {
     deleteMany?: DevolucaoScalarWhereInput | DevolucaoScalarWhereInput[]
   }
 
+  export type PagamentoUpdateManyWithoutVendaNestedInput = {
+    create?: XOR<PagamentoCreateWithoutVendaInput, PagamentoUncheckedCreateWithoutVendaInput> | PagamentoCreateWithoutVendaInput[] | PagamentoUncheckedCreateWithoutVendaInput[]
+    connectOrCreate?: PagamentoCreateOrConnectWithoutVendaInput | PagamentoCreateOrConnectWithoutVendaInput[]
+    upsert?: PagamentoUpsertWithWhereUniqueWithoutVendaInput | PagamentoUpsertWithWhereUniqueWithoutVendaInput[]
+    createMany?: PagamentoCreateManyVendaInputEnvelope
+    set?: PagamentoWhereUniqueInput | PagamentoWhereUniqueInput[]
+    disconnect?: PagamentoWhereUniqueInput | PagamentoWhereUniqueInput[]
+    delete?: PagamentoWhereUniqueInput | PagamentoWhereUniqueInput[]
+    connect?: PagamentoWhereUniqueInput | PagamentoWhereUniqueInput[]
+    update?: PagamentoUpdateWithWhereUniqueWithoutVendaInput | PagamentoUpdateWithWhereUniqueWithoutVendaInput[]
+    updateMany?: PagamentoUpdateManyWithWhereWithoutVendaInput | PagamentoUpdateManyWithWhereWithoutVendaInput[]
+    deleteMany?: PagamentoScalarWhereInput | PagamentoScalarWhereInput[]
+  }
+
   export type NullableBigIntFieldUpdateOperationsInput = {
     set?: bigint | number | null
     increment?: bigint | number
@@ -15537,6 +16998,34 @@ export namespace Prisma {
     update?: DevolucaoUpdateWithWhereUniqueWithoutVendaInput | DevolucaoUpdateWithWhereUniqueWithoutVendaInput[]
     updateMany?: DevolucaoUpdateManyWithWhereWithoutVendaInput | DevolucaoUpdateManyWithWhereWithoutVendaInput[]
     deleteMany?: DevolucaoScalarWhereInput | DevolucaoScalarWhereInput[]
+  }
+
+  export type PagamentoUncheckedUpdateManyWithoutVendaNestedInput = {
+    create?: XOR<PagamentoCreateWithoutVendaInput, PagamentoUncheckedCreateWithoutVendaInput> | PagamentoCreateWithoutVendaInput[] | PagamentoUncheckedCreateWithoutVendaInput[]
+    connectOrCreate?: PagamentoCreateOrConnectWithoutVendaInput | PagamentoCreateOrConnectWithoutVendaInput[]
+    upsert?: PagamentoUpsertWithWhereUniqueWithoutVendaInput | PagamentoUpsertWithWhereUniqueWithoutVendaInput[]
+    createMany?: PagamentoCreateManyVendaInputEnvelope
+    set?: PagamentoWhereUniqueInput | PagamentoWhereUniqueInput[]
+    disconnect?: PagamentoWhereUniqueInput | PagamentoWhereUniqueInput[]
+    delete?: PagamentoWhereUniqueInput | PagamentoWhereUniqueInput[]
+    connect?: PagamentoWhereUniqueInput | PagamentoWhereUniqueInput[]
+    update?: PagamentoUpdateWithWhereUniqueWithoutVendaInput | PagamentoUpdateWithWhereUniqueWithoutVendaInput[]
+    updateMany?: PagamentoUpdateManyWithWhereWithoutVendaInput | PagamentoUpdateManyWithWhereWithoutVendaInput[]
+    deleteMany?: PagamentoScalarWhereInput | PagamentoScalarWhereInput[]
+  }
+
+  export type VendaCreateNestedOneWithoutPagamentosInput = {
+    create?: XOR<VendaCreateWithoutPagamentosInput, VendaUncheckedCreateWithoutPagamentosInput>
+    connectOrCreate?: VendaCreateOrConnectWithoutPagamentosInput
+    connect?: VendaWhereUniqueInput
+  }
+
+  export type VendaUpdateOneRequiredWithoutPagamentosNestedInput = {
+    create?: XOR<VendaCreateWithoutPagamentosInput, VendaUncheckedCreateWithoutPagamentosInput>
+    connectOrCreate?: VendaCreateOrConnectWithoutPagamentosInput
+    upsert?: VendaUpsertWithoutPagamentosInput
+    connect?: VendaWhereUniqueInput
+    update?: XOR<XOR<VendaUpdateToOneWithWhereWithoutPagamentosInput, VendaUpdateWithoutPagamentosInput>, VendaUncheckedUpdateWithoutPagamentosInput>
   }
 
   export type VendaCreateNestedOneWithoutItensInput = {
@@ -16186,6 +17675,7 @@ export namespace Prisma {
     total: Decimal | DecimalJsLike | number | string
     itens?: ItemVendaCreateNestedManyWithoutVendaInput
     devolucoes?: DevolucaoCreateNestedManyWithoutVendaInput
+    pagamentos?: PagamentoCreateNestedManyWithoutVendaInput
   }
 
   export type VendaUncheckedCreateWithoutClienteInput = {
@@ -16194,6 +17684,7 @@ export namespace Prisma {
     total: Decimal | DecimalJsLike | number | string
     itens?: ItemVendaUncheckedCreateNestedManyWithoutVendaInput
     devolucoes?: DevolucaoUncheckedCreateNestedManyWithoutVendaInput
+    pagamentos?: PagamentoUncheckedCreateNestedManyWithoutVendaInput
   }
 
   export type VendaCreateOrConnectWithoutClienteInput = {
@@ -16401,6 +17892,32 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type PagamentoCreateWithoutVendaInput = {
+    id?: bigint | number
+    valor: Decimal | DecimalJsLike | number | string
+    formaPagamento?: string | null
+    observacao?: string | null
+    dataPagamento?: Date | string
+  }
+
+  export type PagamentoUncheckedCreateWithoutVendaInput = {
+    id?: bigint | number
+    valor: Decimal | DecimalJsLike | number | string
+    formaPagamento?: string | null
+    observacao?: string | null
+    dataPagamento?: Date | string
+  }
+
+  export type PagamentoCreateOrConnectWithoutVendaInput = {
+    where: PagamentoWhereUniqueInput
+    create: XOR<PagamentoCreateWithoutVendaInput, PagamentoUncheckedCreateWithoutVendaInput>
+  }
+
+  export type PagamentoCreateManyVendaInputEnvelope = {
+    data: PagamentoCreateManyVendaInput | PagamentoCreateManyVendaInput[]
+    skipDuplicates?: boolean
+  }
+
   export type ClienteUpsertWithoutVendasInput = {
     update: XOR<ClienteUpdateWithoutVendasInput, ClienteUncheckedUpdateWithoutVendasInput>
     create: XOR<ClienteCreateWithoutVendasInput, ClienteUncheckedCreateWithoutVendasInput>
@@ -16468,12 +17985,93 @@ export namespace Prisma {
     total?: DecimalFilter<"Devolucao"> | Decimal | DecimalJsLike | number | string
   }
 
+  export type PagamentoUpsertWithWhereUniqueWithoutVendaInput = {
+    where: PagamentoWhereUniqueInput
+    update: XOR<PagamentoUpdateWithoutVendaInput, PagamentoUncheckedUpdateWithoutVendaInput>
+    create: XOR<PagamentoCreateWithoutVendaInput, PagamentoUncheckedCreateWithoutVendaInput>
+  }
+
+  export type PagamentoUpdateWithWhereUniqueWithoutVendaInput = {
+    where: PagamentoWhereUniqueInput
+    data: XOR<PagamentoUpdateWithoutVendaInput, PagamentoUncheckedUpdateWithoutVendaInput>
+  }
+
+  export type PagamentoUpdateManyWithWhereWithoutVendaInput = {
+    where: PagamentoScalarWhereInput
+    data: XOR<PagamentoUpdateManyMutationInput, PagamentoUncheckedUpdateManyWithoutVendaInput>
+  }
+
+  export type PagamentoScalarWhereInput = {
+    AND?: PagamentoScalarWhereInput | PagamentoScalarWhereInput[]
+    OR?: PagamentoScalarWhereInput[]
+    NOT?: PagamentoScalarWhereInput | PagamentoScalarWhereInput[]
+    id?: BigIntFilter<"Pagamento"> | bigint | number
+    vendaId?: BigIntFilter<"Pagamento"> | bigint | number
+    valor?: DecimalFilter<"Pagamento"> | Decimal | DecimalJsLike | number | string
+    formaPagamento?: StringNullableFilter<"Pagamento"> | string | null
+    observacao?: StringNullableFilter<"Pagamento"> | string | null
+    dataPagamento?: DateTimeFilter<"Pagamento"> | Date | string
+  }
+
+  export type VendaCreateWithoutPagamentosInput = {
+    id?: bigint | number
+    dataVenda?: Date | string
+    total: Decimal | DecimalJsLike | number | string
+    cliente?: ClienteCreateNestedOneWithoutVendasInput
+    itens?: ItemVendaCreateNestedManyWithoutVendaInput
+    devolucoes?: DevolucaoCreateNestedManyWithoutVendaInput
+  }
+
+  export type VendaUncheckedCreateWithoutPagamentosInput = {
+    id?: bigint | number
+    clienteId?: bigint | number | null
+    dataVenda?: Date | string
+    total: Decimal | DecimalJsLike | number | string
+    itens?: ItemVendaUncheckedCreateNestedManyWithoutVendaInput
+    devolucoes?: DevolucaoUncheckedCreateNestedManyWithoutVendaInput
+  }
+
+  export type VendaCreateOrConnectWithoutPagamentosInput = {
+    where: VendaWhereUniqueInput
+    create: XOR<VendaCreateWithoutPagamentosInput, VendaUncheckedCreateWithoutPagamentosInput>
+  }
+
+  export type VendaUpsertWithoutPagamentosInput = {
+    update: XOR<VendaUpdateWithoutPagamentosInput, VendaUncheckedUpdateWithoutPagamentosInput>
+    create: XOR<VendaCreateWithoutPagamentosInput, VendaUncheckedCreateWithoutPagamentosInput>
+    where?: VendaWhereInput
+  }
+
+  export type VendaUpdateToOneWithWhereWithoutPagamentosInput = {
+    where?: VendaWhereInput
+    data: XOR<VendaUpdateWithoutPagamentosInput, VendaUncheckedUpdateWithoutPagamentosInput>
+  }
+
+  export type VendaUpdateWithoutPagamentosInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    dataVenda?: DateTimeFieldUpdateOperationsInput | Date | string
+    total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    cliente?: ClienteUpdateOneWithoutVendasNestedInput
+    itens?: ItemVendaUpdateManyWithoutVendaNestedInput
+    devolucoes?: DevolucaoUpdateManyWithoutVendaNestedInput
+  }
+
+  export type VendaUncheckedUpdateWithoutPagamentosInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    clienteId?: NullableBigIntFieldUpdateOperationsInput | bigint | number | null
+    dataVenda?: DateTimeFieldUpdateOperationsInput | Date | string
+    total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    itens?: ItemVendaUncheckedUpdateManyWithoutVendaNestedInput
+    devolucoes?: DevolucaoUncheckedUpdateManyWithoutVendaNestedInput
+  }
+
   export type VendaCreateWithoutItensInput = {
     id?: bigint | number
     dataVenda?: Date | string
     total: Decimal | DecimalJsLike | number | string
     cliente?: ClienteCreateNestedOneWithoutVendasInput
     devolucoes?: DevolucaoCreateNestedManyWithoutVendaInput
+    pagamentos?: PagamentoCreateNestedManyWithoutVendaInput
   }
 
   export type VendaUncheckedCreateWithoutItensInput = {
@@ -16482,6 +18080,7 @@ export namespace Prisma {
     dataVenda?: Date | string
     total: Decimal | DecimalJsLike | number | string
     devolucoes?: DevolucaoUncheckedCreateNestedManyWithoutVendaInput
+    pagamentos?: PagamentoUncheckedCreateNestedManyWithoutVendaInput
   }
 
   export type VendaCreateOrConnectWithoutItensInput = {
@@ -16525,6 +18124,7 @@ export namespace Prisma {
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     cliente?: ClienteUpdateOneWithoutVendasNestedInput
     devolucoes?: DevolucaoUpdateManyWithoutVendaNestedInput
+    pagamentos?: PagamentoUpdateManyWithoutVendaNestedInput
   }
 
   export type VendaUncheckedUpdateWithoutItensInput = {
@@ -16533,6 +18133,7 @@ export namespace Prisma {
     dataVenda?: DateTimeFieldUpdateOperationsInput | Date | string
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     devolucoes?: DevolucaoUncheckedUpdateManyWithoutVendaNestedInput
+    pagamentos?: PagamentoUncheckedUpdateManyWithoutVendaNestedInput
   }
 
   export type ProdutoUpsertWithoutItensVendaInput = {
@@ -16566,6 +18167,7 @@ export namespace Prisma {
     total: Decimal | DecimalJsLike | number | string
     cliente?: ClienteCreateNestedOneWithoutVendasInput
     itens?: ItemVendaCreateNestedManyWithoutVendaInput
+    pagamentos?: PagamentoCreateNestedManyWithoutVendaInput
   }
 
   export type VendaUncheckedCreateWithoutDevolucoesInput = {
@@ -16574,6 +18176,7 @@ export namespace Prisma {
     dataVenda?: Date | string
     total: Decimal | DecimalJsLike | number | string
     itens?: ItemVendaUncheckedCreateNestedManyWithoutVendaInput
+    pagamentos?: PagamentoUncheckedCreateNestedManyWithoutVendaInput
   }
 
   export type VendaCreateOrConnectWithoutDevolucoesInput = {
@@ -16622,6 +18225,7 @@ export namespace Prisma {
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     cliente?: ClienteUpdateOneWithoutVendasNestedInput
     itens?: ItemVendaUpdateManyWithoutVendaNestedInput
+    pagamentos?: PagamentoUpdateManyWithoutVendaNestedInput
   }
 
   export type VendaUncheckedUpdateWithoutDevolucoesInput = {
@@ -16630,6 +18234,7 @@ export namespace Prisma {
     dataVenda?: DateTimeFieldUpdateOperationsInput | Date | string
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     itens?: ItemVendaUncheckedUpdateManyWithoutVendaNestedInput
+    pagamentos?: PagamentoUncheckedUpdateManyWithoutVendaNestedInput
   }
 
   export type ItemDevolucaoUpsertWithWhereUniqueWithoutDevolucaoInput = {
@@ -16848,6 +18453,7 @@ export namespace Prisma {
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     itens?: ItemVendaUpdateManyWithoutVendaNestedInput
     devolucoes?: DevolucaoUpdateManyWithoutVendaNestedInput
+    pagamentos?: PagamentoUpdateManyWithoutVendaNestedInput
   }
 
   export type VendaUncheckedUpdateWithoutClienteInput = {
@@ -16856,6 +18462,7 @@ export namespace Prisma {
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
     itens?: ItemVendaUncheckedUpdateManyWithoutVendaNestedInput
     devolucoes?: DevolucaoUncheckedUpdateManyWithoutVendaNestedInput
+    pagamentos?: PagamentoUncheckedUpdateManyWithoutVendaNestedInput
   }
 
   export type VendaUncheckedUpdateManyWithoutClienteInput = {
@@ -16933,6 +18540,14 @@ export namespace Prisma {
     total: Decimal | DecimalJsLike | number | string
   }
 
+  export type PagamentoCreateManyVendaInput = {
+    id?: bigint | number
+    valor: Decimal | DecimalJsLike | number | string
+    formaPagamento?: string | null
+    observacao?: string | null
+    dataPagamento?: Date | string
+  }
+
   export type ItemVendaUpdateWithoutVendaInput = {
     id?: BigIntFieldUpdateOperationsInput | bigint | number
     quantidade?: IntFieldUpdateOperationsInput | number
@@ -16972,6 +18587,30 @@ export namespace Prisma {
     id?: BigIntFieldUpdateOperationsInput | bigint | number
     dataDevolucao?: DateTimeFieldUpdateOperationsInput | Date | string
     total?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+  }
+
+  export type PagamentoUpdateWithoutVendaInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    valor?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    formaPagamento?: NullableStringFieldUpdateOperationsInput | string | null
+    observacao?: NullableStringFieldUpdateOperationsInput | string | null
+    dataPagamento?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PagamentoUncheckedUpdateWithoutVendaInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    valor?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    formaPagamento?: NullableStringFieldUpdateOperationsInput | string | null
+    observacao?: NullableStringFieldUpdateOperationsInput | string | null
+    dataPagamento?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PagamentoUncheckedUpdateManyWithoutVendaInput = {
+    id?: BigIntFieldUpdateOperationsInput | bigint | number
+    valor?: DecimalFieldUpdateOperationsInput | Decimal | DecimalJsLike | number | string
+    formaPagamento?: NullableStringFieldUpdateOperationsInput | string | null
+    observacao?: NullableStringFieldUpdateOperationsInput | string | null
+    dataPagamento?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ItemDevolucaoCreateManyDevolucaoInput = {

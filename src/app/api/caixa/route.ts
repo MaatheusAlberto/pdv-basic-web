@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { arredondar, calcularStatusPagamento } from "@/lib/pagamento";
 
 export async function GET(request: NextRequest) {
   try {
@@ -54,6 +55,7 @@ export async function GET(request: NextRequest) {
             },
           },
         },
+        pagamentos: true,
       },
       orderBy: {
         dataVenda: "desc",
@@ -91,6 +93,32 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    // Buscar pagamentos recebidos no período
+    const pagamentos = await prisma.pagamento.findMany({
+      where: {
+        dataPagamento: {
+          gte: filterStartDate,
+          lte: filterEndDate,
+        },
+        ...(clienteId &&
+          clienteId !== "all" && {
+            venda: {
+              clienteId: BigInt(clienteId),
+            },
+          }),
+      },
+      include: {
+        venda: {
+          include: {
+            cliente: true,
+          },
+        },
+      },
+      orderBy: {
+        dataPagamento: "desc",
+      },
+    });
+
     // Buscar todos os clientes para o filtro
     const clientes = await prisma.cliente.findMany({
       select: {
@@ -108,6 +136,15 @@ export async function GET(request: NextRequest) {
         (total, devolucao) => total + Number(devolucao.total.toString()),
         0
       );
+      const totalPago = arredondar(
+        venda.pagamentos.reduce(
+          (total, pagamento) => total + Number(pagamento.valor.toString()),
+          0
+        )
+      );
+      const totalLiquido = arredondar(
+        Number(venda.total.toString()) - totalDevolvido
+      );
 
       return {
         id: venda.id.toString(),
@@ -119,6 +156,9 @@ export async function GET(request: NextRequest) {
         },
         valor: Number(venda.total.toString()),
         valorLiquido: Number(venda.total.toString()) - totalDevolvido,
+        totalPago,
+        saldo: arredondar(totalLiquido - totalPago),
+        statusPagamento: calcularStatusPagamento(totalLiquido, totalPago),
         itens: venda.itens.map((item) => ({
           produto: item.produto.nome,
           quantidade: item.quantidade,
@@ -152,10 +192,34 @@ export async function GET(request: NextRequest) {
       observacoes: `Devolução da venda #${devolucao.vendaId.toString()}`,
     }));
 
+    // Processar pagamentos recebidos
+    const pagamentosProcessados = pagamentos.map((pagamento) => ({
+      id: pagamento.id.toString(),
+      tipo: "pagamento" as const,
+      data: pagamento.dataPagamento,
+      cliente: {
+        id: pagamento.venda.cliente!.id.toString(),
+        nome: pagamento.venda.cliente!.nome,
+      },
+      valor: Number(pagamento.valor.toString()),
+      valorLiquido: Number(pagamento.valor.toString()),
+      itens: [] as {
+        produto: string;
+        quantidade: number;
+        precoUnitario: number;
+        total: number;
+      }[],
+      observacoes: `Pagamento da venda #${pagamento.vendaId.toString()}${
+        pagamento.formaPagamento ? ` • ${pagamento.formaPagamento}` : ""
+      }${pagamento.observacao ? ` • ${pagamento.observacao}` : ""}`,
+    }));
+
     // Combinar e ordenar por data
-    const movimentacoes = [...vendasProcessadas, ...devolucoesProcessadas].sort(
-      (a, b) => new Date(b.data).getTime() - new Date(a.data).getTime()
-    );
+    const movimentacoes = [
+      ...vendasProcessadas,
+      ...devolucoesProcessadas,
+      ...pagamentosProcessados,
+    ].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
 
     // Calcular totais
     const totalEntradas = vendasProcessadas.reduce(
@@ -169,6 +233,29 @@ export async function GET(request: NextRequest) {
       )
     );
     const saldoLiquido = totalEntradas - totalSaidas;
+
+    // Totais de pagamento
+    const totalRecebido = arredondar(
+      pagamentosProcessados.reduce(
+        (total, pagamento) => total + pagamento.valor,
+        0
+      )
+    );
+    const totalEmAberto = arredondar(
+      vendasProcessadas.reduce(
+        (total, venda) => total + (venda.saldo > 0 ? venda.saldo : 0),
+        0
+      )
+    );
+    const totalCreditos = arredondar(
+      vendasProcessadas.reduce(
+        (total, venda) => total + (venda.saldo < 0 ? Math.abs(venda.saldo) : 0),
+        0
+      )
+    );
+    const vendasEmAberto = vendasProcessadas.filter(
+      (venda) => venda.saldo > 0
+    ).length;
 
     // Movimentações de hoje
     const hoje = new Date();
@@ -192,7 +279,12 @@ export async function GET(request: NextRequest) {
         saldoLiquido,
         quantidadeVendas: vendasProcessadas.length,
         quantidadeDevolucoes: devolucoesProcessadas.length,
+        quantidadePagamentos: pagamentosProcessados.length,
         movimentacoesHoje: movimentacoesHoje.length,
+        totalRecebido,
+        totalEmAberto,
+        totalCreditos,
+        vendasEmAberto,
       },
       movimentacoes,
       clientes: clientes.map((cliente) => ({

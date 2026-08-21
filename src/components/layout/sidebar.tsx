@@ -10,6 +10,7 @@ import {
   ShoppingCart,
   RotateCcw,
   CreditCard,
+  Wallet,
   LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,16 @@ const menuItems = [
     title: "Vendas",
     href: "/vendas",
     icon: ShoppingCart,
+  },
+  {
+    title: "Devoluções",
+    href: "/devolucoes",
+    icon: RotateCcw,
+  },
+  {
+    title: "Recebimentos",
+    href: "/recebimentos",
+    icon: Wallet,
   },
   {
     title: "Caixa",

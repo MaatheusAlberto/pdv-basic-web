@@ -97,8 +97,22 @@ model Venda {
   cliente    Cliente?    @relation(fields: [clienteId], references: [id])
   itens      ItemVenda[]
   devolucoes Devolucao[]
+  pagamentos Pagamento[]
 
   @@map("vendas")
+}
+
+model Pagamento {
+  id             BigInt   @id @default(autoincrement())
+  vendaId        BigInt   @map("venda_id")
+  valor          Decimal  @db.Decimal(10, 2)
+  formaPagamento String?  @map("forma_pagamento")
+  observacao     String?
+  dataPagamento  DateTime @default(now()) @map("data_pagamento") @db.Timestamptz
+  venda          Venda    @relation(fields: [vendaId], references: [id])
+
+  @@index([vendaId])
+  @@map("pagamentos")
 }
 
 model ItemVenda {

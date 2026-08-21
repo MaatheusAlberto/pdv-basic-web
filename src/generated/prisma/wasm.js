@@ -186,6 +186,15 @@ exports.Prisma.VendaScalarFieldEnum = {
   total: 'total'
 };
 
+exports.Prisma.PagamentoScalarFieldEnum = {
+  id: 'id',
+  vendaId: 'vendaId',
+  valor: 'valor',
+  formaPagamento: 'formaPagamento',
+  observacao: 'observacao',
+  dataPagamento: 'dataPagamento'
+};
+
 exports.Prisma.ItemVendaScalarFieldEnum = {
   id: 'id',
   vendaId: 'vendaId',
@@ -233,6 +242,7 @@ exports.Prisma.ModelName = {
   Cliente: 'Cliente',
   Produto: 'Produto',
   Venda: 'Venda',
+  Pagamento: 'Pagamento',
   ItemVenda: 'ItemVenda',
   Devolucao: 'Devolucao',
   ItemDevolucao: 'ItemDevolucao'

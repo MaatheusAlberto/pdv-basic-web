@@ -31,7 +31,14 @@ import {
   Download,
   ShoppingCart,
   RotateCcw,
+  Wallet,
+  Clock,
 } from "lucide-react";
+import { PagamentoForm } from "@/components/forms";
+import {
+  STATUS_PAGAMENTO_LABEL,
+  type StatusPagamento,
+} from "@/lib/pagamento";
 import { toast } from "sonner";
 
 interface Cliente {
@@ -41,7 +48,7 @@ interface Cliente {
 
 interface Movimentacao {
   id: string;
-  tipo: "venda" | "devolucao";
+  tipo: "venda" | "devolucao" | "pagamento";
   data: string;
   cliente: Cliente;
   valor: number;
@@ -53,6 +60,9 @@ interface Movimentacao {
     total: number;
   }[];
   observacoes?: string | null;
+  totalPago?: number;
+  saldo?: number;
+  statusPagamento?: StatusPagamento;
 }
 
 interface CaixaData {
@@ -66,7 +76,12 @@ interface CaixaData {
     saldoLiquido: number;
     quantidadeVendas: number;
     quantidadeDevolucoes: number;
+    quantidadePagamentos: number;
     movimentacoesHoje: number;
+    totalRecebido: number;
+    totalEmAberto: number;
+    totalCreditos: number;
+    vendasEmAberto: number;
   };
   movimentacoes: Movimentacao[];
   clientes: Cliente[];
@@ -79,6 +94,12 @@ export function CaixaClient() {
   const [endDate, setEndDate] = useState("");
   const [selectedCliente, setSelectedCliente] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isPagamentoModalOpen, setIsPagamentoModalOpen] = useState(false);
+  const [filtrosAplicados, setFiltrosAplicados] = useState<{
+    start?: string;
+    end?: string;
+    clienteId: string;
+  }>({ clienteId: "all" });
   const itemsPerPage = 10;
 
   const loadCaixaData = async (
@@ -103,6 +124,11 @@ export function CaixaClient() {
 
       const caixaData = await response.json();
       setData(caixaData);
+      setFiltrosAplicados({
+        start,
+        end,
+        clienteId: clienteId && clienteId !== "all" ? clienteId : "all",
+      });
       setCurrentPage(1); // Reset para primeira página
     } catch (error) {
       console.error("Erro ao carregar caixa:", error);
@@ -153,6 +179,21 @@ export function CaixaClient() {
     setEndDate(endDateStr);
     loadCaixaData(startDateStr, endDateStr, selectedCliente);
   };
+
+  const recarregar = () => {
+    loadCaixaData(
+      filtrosAplicados.start,
+      filtrosAplicados.end,
+      filtrosAplicados.clienteId
+    );
+  };
+
+  const clienteSelecionado =
+    filtrosAplicados.clienteId !== "all"
+      ? data?.clientes.find(
+          (cliente) => cliente.id === filtrosAplicados.clienteId
+        )
+      : undefined;
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -269,6 +310,8 @@ export function CaixaClient() {
             th { background-color: #f5f5f5; font-weight: bold; }
             .tipo-venda { background-color: #dcfce7; color: #16a34a; padding: 2px 8px; border-radius: 4px; }
             .tipo-devolucao { background-color: #fecaca; color: #dc2626; padding: 2px 8px; border-radius: 4px; }
+            .tipo-pagamento { background-color: #dbeafe; color: #1d4ed8; padding: 2px 8px; border-radius: 4px; }
+            .aberto { color: #ea580c; }
             .item-row { margin-bottom: 8px; font-size: 12px; line-height: 1.4; }
             .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
           </style>
@@ -312,6 +355,24 @@ export function CaixaClient() {
                   data.resumo.saldoLiquido >= 0 ? "positive" : "negative"
                 }">${formatPrice(data.resumo.saldoLiquido)}</div>
               </div>
+              <div class="resumo-card">
+                <div class="resumo-title">Recebido no Período</div>
+                <div class="resumo-value positive">${formatPrice(
+                  data.resumo.totalRecebido
+                )}</div>
+                <div>${data.resumo.quantidadePagamentos} pagamento(s)</div>
+              </div>
+              <div class="resumo-card">
+                <div class="resumo-title">Em Aberto</div>
+                <div class="resumo-value aberto">${formatPrice(
+                  data.resumo.totalEmAberto
+                )}</div>
+                <div>${data.resumo.vendasEmAberto} venda(s) a receber${
+                  data.resumo.totalCreditos > 0
+                    ? ` • ${formatPrice(data.resumo.totalCreditos)} de crédito`
+                    : ""
+                }</div>
+              </div>
             </div>
           </div>
 
@@ -325,6 +386,7 @@ export function CaixaClient() {
                  <th>Tipo</th>
                  <th>Cliente</th>
                  <th>Itens</th>
+                 <th>Pagamento</th>
                  <th>Valor</th>
                </tr>
              </thead>
@@ -335,22 +397,47 @@ export function CaixaClient() {
                  <tr>
                    <td>${formatDate(mov.data)}</td>
                                       <td><span class="tipo-${mov.tipo}">${
-                                   mov.tipo === "venda" ? "Venda" : "Devolução"
+                                   mov.tipo === "venda"
+                                     ? "Venda"
+                                     : mov.tipo === "devolucao"
+                                     ? "Devolução"
+                                     : "Pagamento"
                                  }</span></td>
                    <td>${mov.cliente.nome}</td>
                    <td>
-                     ${mov.itens
-                       .map(
-                         (item) => `
+                     ${
+                       mov.itens.length > 0
+                         ? mov.itens
+                             .map(
+                               (item) => `
                        <div class="item-row">
                          <strong>${item.produto}</strong><br/>
                          Qtd: ${item.quantidade} × ${formatPrice(
-                           item.precoUnitario
-                         )} = ${formatPrice(item.total)}
+                                 item.precoUnitario
+                               )} = ${formatPrice(item.total)}
                        </div>
                      `
-                       )
-                       .join("")}
+                             )
+                             .join("")
+                         : `<div class="item-row">${mov.observacoes || "-"}</div>`
+                     }
+                   </td>
+                   <td>
+                     ${
+                       mov.tipo === "venda"
+                         ? `${
+                             STATUS_PAGAMENTO_LABEL[
+                               mov.statusPagamento || "PENDENTE"
+                             ]
+                           }<br/><span class="item-row">Pago: ${formatPrice(
+                             mov.totalPago || 0
+                           )}${
+                             (mov.saldo || 0) > 0
+                               ? ` • Aberto: ${formatPrice(mov.saldo || 0)}`
+                               : ""
+                           }</span>`
+                         : "-"
+                     }
                    </td>
                    <td class="${
                      mov.valor >= 0 ? "positive" : "negative"
@@ -426,10 +513,24 @@ export function CaixaClient() {
             até {new Date(data.periodo.fim).toLocaleDateString("pt-BR")}
           </p>
         </div>
-        <Button onClick={exportToPDF} className="flex items-center gap-2">
-          <Download className="h-4 w-4" />
-          Exportar PDF
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {clienteSelecionado && (
+            <Button
+              onClick={() => setIsPagamentoModalOpen(true)}
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+              disabled={data.resumo.totalEmAberto <= 0}
+            >
+              <Wallet className="h-4 w-4" />
+              {data.resumo.totalEmAberto > 0
+                ? `Receber ${formatPrice(data.resumo.totalEmAberto)}`
+                : "Sem saldo em aberto"}
+            </Button>
+          )}
+          <Button onClick={exportToPDF} className="flex items-center gap-2">
+            <Download className="h-4 w-4" />
+            Exportar PDF
+          </Button>
+        </div>
       </div>
 
       {/* Filtros */}
@@ -513,7 +614,7 @@ export function CaixaClient() {
       </Card>
 
       {/* Cards de Resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -563,6 +664,40 @@ export function CaixaClient() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Recebido no Período
+            </CardTitle>
+            <Wallet className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {formatPrice(data.resumo.totalRecebido)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {data.resumo.quantidadePagamentos} pagamento(s)
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Em Aberto</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">
+              {formatPrice(data.resumo.totalEmAberto)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {data.resumo.vendasEmAberto} venda(s) a receber
+              {data.resumo.totalCreditos > 0 &&
+                ` • ${formatPrice(data.resumo.totalCreditos)} de crédito`}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Saldo Líquido</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -594,6 +729,7 @@ export function CaixaClient() {
                 <TableHead>Tipo</TableHead>
                 <TableHead>Cliente</TableHead>
                 <TableHead>Itens</TableHead>
+                <TableHead>Pagamento</TableHead>
                 <TableHead>Valor</TableHead>
               </TableRow>
             </TableHeader>
@@ -604,40 +740,85 @@ export function CaixaClient() {
                   <TableCell>
                     <Badge
                       variant={
-                        movimentacao.tipo === "venda"
-                          ? "default"
-                          : "destructive"
+                        movimentacao.tipo === "devolucao"
+                          ? "destructive"
+                          : "default"
                       }
-                      className="flex items-center gap-1 w-fit"
+                      className={`flex items-center gap-1 w-fit ${
+                        movimentacao.tipo === "pagamento"
+                          ? "bg-blue-600 hover:bg-blue-600"
+                          : ""
+                      }`}
                     >
                       {movimentacao.tipo === "venda" ? (
                         <>
                           <ShoppingCart className="h-3 w-3" />
                           Venda
                         </>
-                      ) : (
+                      ) : movimentacao.tipo === "devolucao" ? (
                         <>
                           <RotateCcw className="h-3 w-3" />
                           Devolução
+                        </>
+                      ) : (
+                        <>
+                          <Wallet className="h-3 w-3" />
+                          Pagamento
                         </>
                       )}
                     </Badge>
                   </TableCell>
                   <TableCell>{movimentacao.cliente.nome}</TableCell>
                   <TableCell className="max-w-xs">
-                    <div className="space-y-1">
-                      {movimentacao.itens.map((item, index) => (
-                        <div key={index} className="text-sm">
-                          <span className="font-medium">{item.produto}</span>
-                          <br />
-                          <span className="text-gray-500">
-                            Qtd: {item.quantidade} ×{" "}
-                            {formatPrice(item.precoUnitario)} ={" "}
-                            {formatPrice(item.total)}
-                          </span>
+                    {movimentacao.itens.length > 0 ? (
+                      <div className="space-y-1">
+                        {movimentacao.itens.map((item, index) => (
+                          <div key={index} className="text-sm">
+                            <span className="font-medium">{item.produto}</span>
+                            <br />
+                            <span className="text-gray-500">
+                              Qtd: {item.quantidade} ×{" "}
+                              {formatPrice(item.precoUnitario)} ={" "}
+                              {formatPrice(item.total)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <span className="text-sm text-gray-500">
+                        {movimentacao.observacoes || "-"}
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {movimentacao.tipo === "venda" ? (
+                      <div>
+                        <Badge
+                          className={
+                            movimentacao.statusPagamento === "PAGO"
+                              ? "bg-green-100 text-green-700 border border-green-200"
+                              : movimentacao.statusPagamento === "PARCIAL"
+                              ? "bg-yellow-100 text-yellow-800 border border-yellow-200"
+                              : movimentacao.statusPagamento === "CREDITO"
+                              ? "bg-blue-100 text-blue-700 border border-blue-200"
+                              : "bg-orange-100 text-orange-700 border border-orange-200"
+                          }
+                        >
+                          {
+                            STATUS_PAGAMENTO_LABEL[
+                              movimentacao.statusPagamento || "PENDENTE"
+                            ]
+                          }
+                        </Badge>
+                        <div className="mt-1 text-xs text-gray-500">
+                          Pago: {formatPrice(movimentacao.totalPago || 0)}
+                          {(movimentacao.saldo || 0) > 0 &&
+                            ` • Aberto: ${formatPrice(movimentacao.saldo || 0)}`}
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     <span
@@ -692,6 +873,17 @@ export function CaixaClient() {
           )}
         </CardContent>
       </Card>
+
+      <PagamentoForm
+        open={isPagamentoModalOpen}
+        onOpenChange={setIsPagamentoModalOpen}
+        cliente={clienteSelecionado}
+        periodo={{
+          dataInicial: filtrosAplicados.start,
+          dataFinal: filtrosAplicados.end,
+        }}
+        onSuccess={recarregar}
+      />
     </div>
   );
 }

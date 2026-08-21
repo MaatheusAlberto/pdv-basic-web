@@ -20,6 +20,13 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Plus,
   RotateCcw,
   Eye,
@@ -30,11 +37,18 @@ import {
   ChevronRight,
   Filter,
   Printer,
+  DollarSign,
+  Trash2,
 } from "lucide-react";
-import { VendaForm, DevolucaoForm } from "@/components/forms";
+import { VendaForm, DevolucaoForm, PagamentoForm } from "@/components/forms";
 import { getVendas, type Venda } from "@/actions/venda-actions";
 import { getClientes, type Cliente } from "@/actions/cliente-actions";
 import { getProdutos, type Produto } from "@/actions/produto-actions";
+import { estornarPagamento, quitarVenda } from "@/actions/pagamento-actions";
+import {
+  STATUS_PAGAMENTO_LABEL,
+  type StatusPagamento,
+} from "@/lib/pagamento";
 import { toast } from "sonner";
 
 export function VendasPageClient() {
@@ -45,6 +59,15 @@ export function VendasPageClient() {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(true);
   const [vendaSelecionada, setVendaSelecionada] = useState<Venda | undefined>();
+  const [isPagamentoModalOpen, setIsPagamentoModalOpen] = useState(false);
+  const [vendaPagamento, setVendaPagamento] = useState<Venda | undefined>();
+  const [pagamentoParaEstornar, setPagamentoParaEstornar] = useState<{
+    id: bigint;
+    valor: number;
+    vendaId: bigint;
+  } | null>(null);
+  const [quitandoVendaId, setQuitandoVendaId] = useState<string | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [selectedCliente, setSelectedCliente] = useState<string>("all");
   const [selectedProduto, setSelectedProduto] = useState<string>("all");
   const [dataInicial, setDataInicial] = useState<string>(() => {
@@ -108,6 +131,53 @@ export function VendasPageClient() {
   const handleNovaDevolucao = (venda: Venda) => {
     setVendaSelecionada(venda);
     setIsDevolucaoModalOpen(true);
+  };
+
+  const handleRegistrarPagamento = (venda: Venda) => {
+    setVendaPagamento(venda);
+    setIsPagamentoModalOpen(true);
+  };
+
+  const handleQuitarVenda = async (venda: Venda) => {
+    setQuitandoVendaId(venda.id.toString());
+
+    try {
+      const result = await quitarVenda({
+        vendaId: BigInt(venda.id.toString()),
+      });
+
+      if (result.success) {
+        toast.success(result.message);
+        loadVendas();
+      } else {
+        toast.error(result.error || "Erro ao quitar venda");
+      }
+    } catch (error) {
+      console.error("Erro ao quitar venda:", error);
+      toast.error("Erro inesperado ao quitar venda");
+    } finally {
+      setQuitandoVendaId(null);
+    }
+  };
+
+  const handleEstornarPagamento = async () => {
+    if (!pagamentoParaEstornar) return;
+
+    try {
+      const result = await estornarPagamento(pagamentoParaEstornar.id);
+
+      if (result.success) {
+        toast.success(result.message);
+        loadVendas();
+      } else {
+        toast.error(result.error || "Erro ao estornar pagamento");
+      }
+    } catch (error) {
+      console.error("Erro ao estornar pagamento:", error);
+      toast.error("Erro inesperado ao estornar pagamento");
+    } finally {
+      setPagamentoParaEstornar(null);
+    }
   };
 
   const handleImprimirComprovante = (venda: Venda) => {
@@ -208,6 +278,24 @@ export function VendasPageClient() {
               : ""
           }
           
+          <div class="total-line">
+            <span>PAGO:</span>
+            <span>${formatPrice(venda.totalPago)}</span>
+          </div>
+          ${
+            venda.saldo > 0
+              ? `<div class="total-line" style="color: #b45309;">
+                   <span>EM ABERTO:</span>
+                   <span>${formatPrice(venda.saldo)}</span>
+                 </div>`
+              : venda.saldo < 0
+              ? `<div class="total-line" style="color: #1d4ed8;">
+                   <span>CREDITO AO CLIENTE:</span>
+                   <span>${formatPrice(Math.abs(venda.saldo))}</span>
+                 </div>`
+              : `<div class="center bold">*** VENDA PAGA ***</div>`
+          }
+
           <div class="separator"></div>
           <div class="center" style="font-size: 10px;">
             Obrigado pela preferência!
@@ -286,6 +374,19 @@ export function VendasPageClient() {
     }).format(new Date(date));
   };
 
+  const statusBadgeClass = (status: StatusPagamento) => {
+    switch (status) {
+      case "PAGO":
+        return "bg-green-100 text-green-700 border border-green-200";
+      case "PARCIAL":
+        return "bg-yellow-100 text-yellow-800 border border-yellow-200";
+      case "CREDITO":
+        return "bg-blue-100 text-blue-700 border border-blue-200";
+      default:
+        return "bg-orange-100 text-orange-700 border border-orange-200";
+    }
+  };
+
   const calculateTotalItens = (venda: Venda) => {
     return venda.itens.reduce((total, item) => total + item.quantidade, 0);
   };
@@ -304,13 +405,21 @@ export function VendasPageClient() {
         (item) => item.produto.id.toString() === selectedProduto
       );
 
+    // Filtro por status de pagamento
+    const statusMatch =
+      selectedStatus === "all" ||
+      (selectedStatus === "aberto"
+        ? venda.statusPagamento === "PENDENTE" ||
+          venda.statusPagamento === "PARCIAL"
+        : venda.statusPagamento === selectedStatus);
+
     // Filtro por intervalo de datas
     const vendaDate = new Date(venda.dataVenda).toISOString().split("T")[0];
     const dataInicialMatch = vendaDate >= dataInicial;
     const dataFinalMatch = vendaDate <= dataFinal;
     const dateMatch = dataInicialMatch && dataFinalMatch;
 
-    return clienteMatch && produtoMatch && dateMatch;
+    return clienteMatch && produtoMatch && statusMatch && dateMatch;
   });
 
   const getVendaStats = () => {
@@ -328,8 +437,32 @@ export function VendasPageClient() {
       const dataVenda = new Date(venda.dataVenda);
       return dataVenda.toDateString() === hoje.toDateString();
     }).length;
+    const totalRecebido = vendasFiltradas.reduce(
+      (total, venda) => total + venda.totalPago,
+      0
+    );
+    const totalAReceber = vendasFiltradas.reduce(
+      (total, venda) => total + (venda.saldo > 0 ? venda.saldo : 0),
+      0
+    );
+    const totalCreditos = vendasFiltradas.reduce(
+      (total, venda) => total + (venda.saldo < 0 ? Math.abs(venda.saldo) : 0),
+      0
+    );
+    const vendasEmAberto = vendasFiltradas.filter(
+      (venda) => venda.saldo > 0
+    ).length;
 
-    return { totalVendas, totalFaturamento, totalDevolvido, vendasHoje };
+    return {
+      totalVendas,
+      totalFaturamento,
+      totalDevolvido,
+      vendasHoje,
+      totalRecebido,
+      totalAReceber,
+      totalCreditos,
+      vendasEmAberto,
+    };
   };
 
   const stats = getVendaStats();
@@ -343,7 +476,7 @@ export function VendasPageClient() {
   // Reset da página quando mudar o filtro
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedCliente, dataInicial, dataFinal]);
+  }, [selectedCliente, selectedProduto, selectedStatus, dataInicial, dataFinal]);
 
   const handlePreviousPage = () => {
     setCurrentPage((prev) => Math.max(prev - 1, 1));
@@ -429,6 +562,24 @@ export function VendasPageClient() {
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <Label htmlFor="status-filter" className="text-sm font-medium">
+                Pagamento
+              </Label>
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Status do pagamento" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os status</SelectItem>
+                  <SelectItem value="aberto">Em aberto</SelectItem>
+                  <SelectItem value="PENDENTE">Pendente</SelectItem>
+                  <SelectItem value="PARCIAL">Pago parcial</SelectItem>
+                  <SelectItem value="PAGO">Pago</SelectItem>
+                  <SelectItem value="CREDITO">Crédito ao cliente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="min-w-0 w-full sm:w-auto">
               <Label htmlFor="data-inicial" className="text-sm font-medium">
                 Data Inicial
@@ -455,6 +606,7 @@ export function VendasPageClient() {
             </div>
             {(selectedCliente !== "all" ||
               selectedProduto !== "all" ||
+              selectedStatus !== "all" ||
               dataInicial !== new Date().toISOString().split("T")[0] ||
               dataFinal !== new Date().toISOString().split("T")[0]) && (
               <Button
@@ -463,6 +615,7 @@ export function VendasPageClient() {
                 onClick={() => {
                   setSelectedCliente("all");
                   setSelectedProduto("all");
+                  setSelectedStatus("all");
                   const today = new Date().toISOString().split("T")[0];
                   setDataInicial(today);
                   setDataFinal(today);
@@ -477,7 +630,7 @@ export function VendasPageClient() {
       </Card>
 
       {/* Cards de Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -518,6 +671,23 @@ export function VendasPageClient() {
               {formatPrice(stats.totalDevolvido)}
             </div>
             <p className="text-xs text-muted-foreground">em devoluções</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">A Receber</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">
+              {formatPrice(stats.totalAReceber)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {stats.vendasEmAberto} venda(s) em aberto
+              {stats.totalCreditos > 0 &&
+                ` • ${formatPrice(stats.totalCreditos)} de crédito`}
+            </p>
           </CardContent>
         </Card>
 
@@ -596,6 +766,8 @@ export function VendasPageClient() {
                 variant="outline"
                 onClick={() => {
                   setSelectedCliente("all");
+                  setSelectedProduto("all");
+                  setSelectedStatus("all");
                   const today = new Date().toISOString().split("T")[0];
                   setDataInicial(today);
                   setDataFinal(today);
@@ -627,6 +799,11 @@ export function VendasPageClient() {
                             <User className="h-4 w-4" />
                             {venda.cliente.nome}
                           </div>
+                          <Badge
+                            className={statusBadgeClass(venda.statusPagamento)}
+                          >
+                            {STATUS_PAGAMENTO_LABEL[venda.statusPagamento]}
+                          </Badge>
                         </div>
                         <div className="flex items-center gap-6">
                           <div className="text-right">
@@ -651,6 +828,22 @@ export function VendasPageClient() {
                               {formatPrice(venda.totalLiquido)}
                             </div>
                           </div>
+                          {venda.saldo !== 0 && (
+                            <div className="text-right">
+                              <div className="text-sm text-gray-600">
+                                {venda.saldo > 0 ? "Em aberto" : "Crédito"}
+                              </div>
+                              <div
+                                className={`font-semibold ${
+                                  venda.saldo > 0
+                                    ? "text-orange-600"
+                                    : "text-blue-600"
+                                }`}
+                              >
+                                {formatPrice(Math.abs(venda.saldo))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </AccordionTrigger>
@@ -658,7 +851,7 @@ export function VendasPageClient() {
                       <div className="pt-4 space-y-4">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-4">
                               <div>
                                 <span className="text-sm text-gray-600">
                                   Total Original:
@@ -681,6 +874,32 @@ export function VendasPageClient() {
                                 </span>
                                 <div className="text-lg font-semibold text-green-600">
                                   {formatPrice(venda.totalLiquido)}
+                                </div>
+                              </div>
+                              <div>
+                                <span className="text-sm text-gray-600">
+                                  Total Pago:
+                                </span>
+                                <div className="text-lg font-semibold text-green-700">
+                                  {formatPrice(venda.totalPago)}
+                                </div>
+                              </div>
+                              <div>
+                                <span className="text-sm text-gray-600">
+                                  {venda.saldo < 0
+                                    ? "Crédito ao Cliente:"
+                                    : "Em Aberto:"}
+                                </span>
+                                <div
+                                  className={`text-lg font-semibold ${
+                                    venda.saldo > 0
+                                      ? "text-orange-600"
+                                      : venda.saldo < 0
+                                      ? "text-blue-600"
+                                      : "text-green-600"
+                                  }`}
+                                >
+                                  {formatPrice(Math.abs(venda.saldo))}
                                 </div>
                               </div>
                             </div>
@@ -746,6 +965,54 @@ export function VendasPageClient() {
                                   ))}
                                 </div>
                               )}
+                            {/* Pagamentos */}
+                            <div className="mb-4">
+                              <div className="text-sm text-gray-600 mb-2 font-medium">
+                                Pagamentos:
+                              </div>
+                              {venda.pagamentos.length === 0 ? (
+                                <div className="text-sm text-gray-500 bg-gray-50 rounded px-3 py-2">
+                                  Nenhum pagamento registrado nesta venda
+                                </div>
+                              ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                  {venda.pagamentos.map((pagamento) => (
+                                    <div
+                                      key={pagamento.id.toString()}
+                                      className="flex items-center justify-between bg-green-50 border border-green-200 rounded px-3 py-2 text-sm"
+                                    >
+                                      <div className="min-w-0">
+                                        <div className="font-medium text-green-700">
+                                          {formatPrice(pagamento.valor)}
+                                        </div>
+                                        <div className="text-xs text-gray-600">
+                                          {formatDate(pagamento.dataPagamento)}
+                                          {pagamento.formaPagamento &&
+                                            ` • ${pagamento.formaPagamento}`}
+                                          {pagamento.observacao &&
+                                            ` • ${pagamento.observacao}`}
+                                        </div>
+                                      </div>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-8 w-8 shrink-0 p-0 text-red-600 hover:bg-red-100 hover:text-red-700"
+                                        title="Estornar pagamento"
+                                        onClick={() =>
+                                          setPagamentoParaEstornar({
+                                            id: pagamento.id,
+                                            valor: pagamento.valor,
+                                            vendaId: venda.id,
+                                          })
+                                        }
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           <div className="ml-4 space-y-2">
@@ -767,6 +1034,31 @@ export function VendasPageClient() {
                               <RotateCcw className="h-4 w-4" />
                               Devolução
                             </Button>
+                            {venda.saldo > 0 && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleRegistrarPagamento(venda)}
+                                  className="flex items-center gap-1 w-full bg-green-600 hover:bg-green-700"
+                                >
+                                  <DollarSign className="h-4 w-4" />
+                                  Pagamento
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={
+                                    quitandoVendaId === venda.id.toString()
+                                  }
+                                  onClick={() => handleQuitarVenda(venda)}
+                                  className="flex items-center gap-1 w-full"
+                                >
+                                  {quitandoVendaId === venda.id.toString()
+                                    ? "Quitando..."
+                                    : "Quitar tudo"}
+                                </Button>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -838,6 +1130,46 @@ export function VendasPageClient() {
         venda={vendaSelecionada}
         onSuccess={handleSuccess}
       />
+
+      <PagamentoForm
+        open={isPagamentoModalOpen}
+        onOpenChange={setIsPagamentoModalOpen}
+        venda={vendaPagamento}
+        onSuccess={() => loadVendas()}
+      />
+
+      {/* Confirmação de estorno de pagamento */}
+      <Dialog
+        open={!!pagamentoParaEstornar}
+        onOpenChange={(open) => !open && setPagamentoParaEstornar(null)}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Estornar pagamento</DialogTitle>
+            <DialogDescription>
+              {pagamentoParaEstornar &&
+                `O pagamento de ${formatPrice(
+                  pagamentoParaEstornar.valor
+                )} da venda #${pagamentoParaEstornar.vendaId.toString()} será removido e o valor volta a ficar em aberto.`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col sm:flex-row justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setPagamentoParaEstornar(null)}
+              className="w-full sm:w-auto"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleEstornarPagamento}
+              className="w-full bg-red-600 hover:bg-red-700 sm:w-auto"
+            >
+              Estornar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

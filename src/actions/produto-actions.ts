@@ -21,6 +21,15 @@ export type Produto = {
   preco: number;
 };
 
+export type ResumoProduto = {
+  produtoId: bigint;
+  quantidadeVendida: number;
+  quantidadeDevolvida: number;
+  quantidadeLiquida: number;
+  faturamento: number;
+  ultimaVenda: Date | null;
+};
+
 export type CreateProdutoData = z.infer<typeof ProdutoSchema>;
 export type UpdateProdutoData = z.infer<typeof ProdutoUpdateSchema>;
 
@@ -229,5 +238,96 @@ export async function searchProdutos(searchTerm: string): Promise<Produto[]> {
   } catch (error) {
     console.error("Erro ao pesquisar produtos:", error);
     throw new Error("Falha ao pesquisar produtos");
+  }
+}
+
+const inicioDoDia = (data: string) => new Date(`${data}T00:00:00`);
+const fimDoDia = (data: string) => new Date(`${data}T23:59:59.999`);
+
+// Resumo de vendas por produto (quantidades, faturamento liquido e ultima venda).
+// Sem filtro de data, considera todo o historico. As vendas entram pela data da
+// venda e as devolucoes pela data da devolucao, igual ao relatorio do caixa.
+export async function getResumoVendasProdutos(
+  filtros: { dataInicial?: string; dataFinal?: string } = {}
+): Promise<ResumoProduto[]> {
+  try {
+    const intervalo =
+      filtros.dataInicial || filtros.dataFinal
+        ? {
+            ...(filtros.dataInicial
+              ? { gte: inicioDoDia(filtros.dataInicial) }
+              : {}),
+            ...(filtros.dataFinal ? { lte: fimDoDia(filtros.dataFinal) } : {}),
+          }
+        : null;
+
+    const [itensVenda, itensDevolucao] = await Promise.all([
+      prisma.itemVenda.findMany({
+        where: intervalo ? { venda: { dataVenda: intervalo } } : {},
+        select: {
+          produtoId: true,
+          quantidade: true,
+          precoUnitario: true,
+          venda: { select: { dataVenda: true } },
+        },
+      }),
+      prisma.itemDevolucao.findMany({
+        where: intervalo ? { devolucao: { dataDevolucao: intervalo } } : {},
+        select: {
+          produtoId: true,
+          quantidade: true,
+          precoUnitario: true,
+        },
+      }),
+    ]);
+
+    const resumos = new Map<string, ResumoProduto>();
+
+    const obter = (produtoId: bigint) => {
+      const chave = produtoId.toString();
+      const atual = resumos.get(chave);
+      if (atual) return atual;
+
+      const novo: ResumoProduto = {
+        produtoId,
+        quantidadeVendida: 0,
+        quantidadeDevolvida: 0,
+        quantidadeLiquida: 0,
+        faturamento: 0,
+        ultimaVenda: null,
+      };
+      resumos.set(chave, novo);
+      return novo;
+    };
+
+    for (const item of itensVenda) {
+      const resumo = obter(item.produtoId);
+      resumo.quantidadeVendida += item.quantidade;
+      resumo.faturamento +=
+        item.quantidade * Number(item.precoUnitario.toString());
+
+      if (
+        !resumo.ultimaVenda ||
+        new Date(item.venda.dataVenda) > new Date(resumo.ultimaVenda)
+      ) {
+        resumo.ultimaVenda = item.venda.dataVenda;
+      }
+    }
+
+    for (const item of itensDevolucao) {
+      const resumo = obter(item.produtoId);
+      resumo.quantidadeDevolvida += item.quantidade;
+      resumo.faturamento -=
+        item.quantidade * Number(item.precoUnitario.toString());
+    }
+
+    return Array.from(resumos.values()).map((resumo) => ({
+      ...resumo,
+      quantidadeLiquida: resumo.quantidadeVendida - resumo.quantidadeDevolvida,
+      faturamento: Math.round((resumo.faturamento + Number.EPSILON) * 100) / 100,
+    }));
+  } catch (error) {
+    console.error("Erro ao buscar resumo de vendas por produto:", error);
+    throw new Error("Falha ao buscar resumo de vendas por produto");
   }
 }
