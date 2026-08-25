@@ -502,3 +502,64 @@ export async function createDevolucao(data: CreateDevolucaoData) {
     };
   }
 }
+
+// Excluir uma venda inteira (para quando a venda foi lancada errada).
+// Remove junto os itens, as devolucoes e os pagamentos ligados a ela.
+export async function deleteVenda(id: bigint) {
+  try {
+    const venda = await prisma.venda.findUnique({
+      where: { id },
+      include: {
+        cliente: true,
+        itens: true,
+        pagamentos: true,
+        devolucoes: { include: { itens: true } },
+      },
+    });
+
+    if (!venda) {
+      throw new Error("Venda não encontrada");
+    }
+
+    const totalPago = venda.pagamentos.reduce(
+      (acc, pagamento) => acc + Number(pagamento.valor.toString()),
+      0
+    );
+
+    await prisma.$transaction([
+      prisma.itemDevolucao.deleteMany({
+        where: { devolucao: { vendaId: id } },
+      }),
+      prisma.devolucao.deleteMany({ where: { vendaId: id } }),
+      prisma.pagamento.deleteMany({ where: { vendaId: id } }),
+      prisma.itemVenda.deleteMany({ where: { vendaId: id } }),
+      prisma.venda.delete({ where: { id } }),
+    ]);
+
+    revalidatePath("/vendas");
+    revalidatePath("/caixa");
+    revalidatePath("/recebimentos");
+    revalidatePath("/devolucoes");
+    revalidatePath("/produtos");
+    revalidatePath("/dashboard");
+
+    return {
+      success: true,
+      data: {
+        vendaId: id.toString(),
+        itens: venda.itens.length,
+        devolucoes: venda.devolucoes.length,
+        pagamentos: venda.pagamentos.length,
+        totalPago,
+      },
+      message: `Venda #${id.toString()} excluída`,
+    };
+  } catch (error) {
+    console.error("Erro ao excluir venda:", error);
+
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Erro desconhecido",
+    };
+  }
+}

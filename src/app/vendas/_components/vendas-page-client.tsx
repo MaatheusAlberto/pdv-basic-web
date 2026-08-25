@@ -41,7 +41,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { VendaForm, DevolucaoForm, PagamentoForm } from "@/components/forms";
-import { getVendas, type Venda } from "@/actions/venda-actions";
+import { getVendas, deleteVenda, type Venda } from "@/actions/venda-actions";
 import { getClientes, type Cliente } from "@/actions/cliente-actions";
 import { getProdutos, type Produto } from "@/actions/produto-actions";
 import { estornarPagamento, quitarVenda } from "@/actions/pagamento-actions";
@@ -67,6 +67,8 @@ export function VendasPageClient() {
     vendaId: bigint;
   } | null>(null);
   const [quitandoVendaId, setQuitandoVendaId] = useState<string | null>(null);
+  const [vendaParaExcluir, setVendaParaExcluir] = useState<Venda | null>(null);
+  const [excluindoVenda, setExcluindoVenda] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [selectedCliente, setSelectedCliente] = useState<string>("all");
   const [selectedProduto, setSelectedProduto] = useState<string>("all");
@@ -157,6 +159,29 @@ export function VendasPageClient() {
       toast.error("Erro inesperado ao quitar venda");
     } finally {
       setQuitandoVendaId(null);
+    }
+  };
+
+  const handleExcluirVenda = async () => {
+    if (!vendaParaExcluir) return;
+
+    setExcluindoVenda(true);
+
+    try {
+      const result = await deleteVenda(BigInt(vendaParaExcluir.id.toString()));
+
+      if (result.success) {
+        toast.success(result.message);
+        setVendaParaExcluir(null);
+        loadVendas();
+      } else {
+        toast.error(result.error || "Erro ao excluir venda");
+      }
+    } catch (error) {
+      console.error("Erro ao excluir venda:", error);
+      toast.error("Erro inesperado ao excluir venda");
+    } finally {
+      setExcluindoVenda(false);
     }
   };
 
@@ -1059,6 +1084,15 @@ export function VendasPageClient() {
                                 </Button>
                               </>
                             )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setVendaParaExcluir(venda)}
+                              className="flex items-center gap-1 w-full text-red-600 hover:bg-red-50 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Excluir venda
+                            </Button>
                           </div>
                         </div>
                       </div>
@@ -1137,6 +1171,102 @@ export function VendasPageClient() {
         venda={vendaPagamento}
         onSuccess={() => loadVendas()}
       />
+
+      {/* Confirmação de exclusão da venda */}
+      <Dialog
+        open={!!vendaParaExcluir}
+        onOpenChange={(open) => !open && setVendaParaExcluir(null)}
+      >
+        <DialogContent className="flex max-h-[92vh] w-[95vw] flex-col gap-4 overflow-hidden p-4 sm:max-w-lg sm:p-6">
+          <DialogHeader className="flex-shrink-0">
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="h-5 w-5" />
+              Excluir venda
+            </DialogTitle>
+            <DialogDescription>
+              Esta ação não pode ser desfeita. Use apenas quando a venda foi
+              lançada errada.
+            </DialogDescription>
+          </DialogHeader>
+
+          {vendaParaExcluir && (
+            <>
+              <div className="min-h-0 flex-1 space-y-3 overflow-y-auto">
+                <div className="rounded-lg border p-3 text-sm">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant="outline">
+                      Venda #{vendaParaExcluir.id.toString()}
+                    </Badge>
+                    <span className="text-gray-600">
+                      {formatDate(vendaParaExcluir.dataVenda)}
+                    </span>
+                  </div>
+                  <div className="mt-2 grid grid-cols-2 gap-1">
+                    <span className="text-gray-600">Cliente</span>
+                    <span className="text-right font-medium">
+                      {vendaParaExcluir.cliente.nome}
+                    </span>
+                    <span className="text-gray-600">Total da venda</span>
+                    <span className="text-right font-medium">
+                      {formatPrice(vendaParaExcluir.total)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm">
+                  <div className="font-medium text-red-700">
+                    Será apagado junto:
+                  </div>
+                  <ul className="mt-2 space-y-1 text-gray-700">
+                    <li>
+                      • {vendaParaExcluir.itens.length} produto(s) da venda (
+                      {calculateTotalItens(vendaParaExcluir)} itens)
+                    </li>
+                    {vendaParaExcluir.devolucoes.length > 0 && (
+                      <li className="font-medium text-red-700">
+                        • {vendaParaExcluir.devolucoes.length} devolução(ões) no
+                        valor de {formatPrice(vendaParaExcluir.totalDevolvido)}
+                      </li>
+                    )}
+                    {vendaParaExcluir.pagamentos.length > 0 && (
+                      <li className="font-medium text-red-700">
+                        • {vendaParaExcluir.pagamentos.length} pagamento(s) já
+                        recebido(s), somando{" "}
+                        {formatPrice(vendaParaExcluir.totalPago)}
+                      </li>
+                    )}
+                  </ul>
+                  {(vendaParaExcluir.pagamentos.length > 0 ||
+                    vendaParaExcluir.devolucoes.length > 0) && (
+                    <p className="mt-2 text-xs text-red-700">
+                      Isso vai alterar os números do Caixa e dos Recebimentos
+                      deste período.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-shrink-0 flex-col justify-end gap-2 border-t pt-3 sm:flex-row">
+                <Button
+                  variant="outline"
+                  onClick={() => setVendaParaExcluir(null)}
+                  disabled={excluindoVenda}
+                  className="w-full sm:w-auto"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleExcluirVenda}
+                  disabled={excluindoVenda}
+                  className="w-full bg-red-600 hover:bg-red-700 sm:w-auto"
+                >
+                  {excluindoVenda ? "Excluindo..." : "Excluir venda"}
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Confirmação de estorno de pagamento */}
       <Dialog
